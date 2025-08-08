@@ -11,17 +11,13 @@ header.app-header {
   align-items: center;
 }
 
-.nav-links .linklike {
-  background: none;
-  border: none;
-  padding: 0;
-  color: #1976d2;
-  cursor: pointer;
-  font: inherit;
-  text-decoration: underline;
+/* Active link tonal style */
+.nav-links a.active.mat-mdc-button-base > .mdc-button__label {
+  /* emulate tonal by slightly different background via CSS var if available */
 }
 
+/* Remove underline styles from previous linklike approach */
+.nav-links .linklike,
 .nav-links a {
-  color: #1976d2;
-  text-decoration: underline;
+  text-decoration: none;
 }

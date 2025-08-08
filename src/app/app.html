@@ -2,11 +2,11 @@
   <h1>Kamrapajtás</h1>
   <p>Recept- és menütervező alkalmazás</p>
   <nav class="nav-links">
-    <a routerLink="/kamra">Kamra</a>
+    <a mat-button routerLink="/kamra" routerLinkActive="active">Kamra</a>
     @if (auth.user$ | async; as user) {
-      <button class="linklike" (click)="logout()">Kijelentkezés</button>
+      <button mat-button (click)="logout()">Kijelentkezés</button>
     } @else {
-      <a routerLink="/login">Bejelentkezés</a>
+      <a mat-button routerLink="/login" routerLinkActive="active">Bejelentkezés</a>
     }
   </nav>
 </header>
