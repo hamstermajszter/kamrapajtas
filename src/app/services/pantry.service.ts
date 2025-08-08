@@ -11,16 +11,19 @@ import {
   CollectionReference,
   DocumentData,
   query,
-  orderBy
+  orderBy,
+  where
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { PantryItem } from '../models/pantry-item.interface';
+import { Auth } from '@angular/fire/auth';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PantryService {
   private firestore = inject(Firestore);
+  private auth = inject(Auth);
   private pantryCollection: CollectionReference<DocumentData>;
 
   constructor() {
@@ -29,8 +32,10 @@ export class PantryService {
 
   async addPantryItem(item: Omit<PantryItem, 'id' | 'createdAt'>): Promise<void> {
     try {
+      const user = this.auth.currentUser;
       await addDoc(this.pantryCollection, {
         ...item,
+        userId: user?.uid ?? null,
         createdAt: serverTimestamp()
       });
     } catch (error) {
@@ -40,7 +45,10 @@ export class PantryService {
   }
 
   getPantryItems(): Observable<PantryItem[]> {
-    const q = query(this.pantryCollection, orderBy('createdAt', 'desc'));
+    const user = this.auth.currentUser;
+    const q = user
+      ? query(this.pantryCollection, where('userId', '==', user.uid), orderBy('createdAt', 'desc'))
+      : query(this.pantryCollection, orderBy('createdAt', 'desc'));
     return collectionData(q, { idField: 'id' }) as Observable<PantryItem[]>;
   }
 

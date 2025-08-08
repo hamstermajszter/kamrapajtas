@@ -6,4 +6,5 @@ export interface PantryItem {
   quantity: number;
   unit: string;
   createdAt: Timestamp;
+  userId?: string;
 }
