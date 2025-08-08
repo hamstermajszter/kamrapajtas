@@ -183,6 +183,9 @@ export class PantryAddComponent implements OnInit {
   private pantryNamesLowercase: Set<string> = new Set<string>();
 
   ngOnInit(): void {
+    // Show suggestions immediately on first render
+    this.recomputeSuggestions();
+
     this.pantryService
       .getPantryItems()
       .pipe(takeUntilDestroyed(this.destroyRef))
