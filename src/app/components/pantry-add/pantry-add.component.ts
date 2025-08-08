@@ -9,6 +9,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { PantryService } from '../../services/pantry.service';
 import { PantryItem } from '../../models/pantry-item.interface';
 
+
 @Component({
   selector: 'app-pantry-add',
   imports: [
@@ -97,7 +98,6 @@ export class PantryAddComponent {
   private formBuilder = inject(FormBuilder);
   private pantryService = inject(PantryService);
   private snackBar = inject(MatSnackBar);
-
   isLoading = false;
 
   units = [

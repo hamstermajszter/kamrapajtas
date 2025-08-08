@@ -1,0 +1,23 @@
+header.app-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Active link tonal style */
+.nav-links a.active.mat-mdc-button-base > .mdc-button__label {
+  /* emulate tonal by slightly different background via CSS var if available */
+}
+
+/* Remove underline styles from previous linklike approach */
+.nav-links .linklike,
+.nav-links a {
+  text-decoration: none;
+}

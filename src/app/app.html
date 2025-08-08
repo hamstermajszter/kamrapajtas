@@ -1,6 +1,14 @@
 <header class="app-header">
   <h1>Kamrapajtás</h1>
   <p>Recept- és menütervező alkalmazás</p>
+  <nav class="nav-links">
+    <a mat-button routerLink="/kamra" routerLinkActive="active">Kamra</a>
+    @if (auth.user$ | async; as user) {
+      <button mat-button (click)="logout()">Kijelentkezés</button>
+    } @else {
+      <a mat-button routerLink="/login" routerLinkActive="active">Bejelentkezés</a>
+    }
+  </nav>
 </header>
 
 <main class="app-main">
