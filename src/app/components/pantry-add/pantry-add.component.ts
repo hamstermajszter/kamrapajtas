@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { PantryService } from '../../services/pantry.service';
 import { PantryItem } from '../../models/pantry-item.interface';
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -21,14 +21,15 @@ import { AuthService } from '../../services/auth.service';
     MatSelectModule,
     MatButtonModule,
     MatSnackBarModule,
-    AsyncPipe,
-    NgIf
+    AsyncPipe
   ],
   template: `
-    <div class="auth-bar" *ngIf="authService.user$ | async as user">
-      <span>Bejelentkezve: {{ user.email || 'Google felhasználó' }}</span>
-      <button mat-button color="warn" (click)="logout()">Kijelentkezés</button>
-    </div>
+    @if (authService.user$ | async; as user) {
+      <div class="auth-bar">
+        <span>Bejelentkezve: {{ user.email || 'Google felhasználó' }}</span>
+        <button mat-button color="warn" (click)="logout()">Kijelentkezés</button>
+      </div>
+    }
     <mat-card>
       <mat-card-header>
         <mat-card-title>Új hozzávaló felvitele</mat-card-title>
