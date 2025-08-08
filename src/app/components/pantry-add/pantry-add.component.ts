@@ -8,8 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { PantryService } from '../../services/pantry.service';
 import { PantryItem } from '../../models/pantry-item.interface';
-import { AsyncPipe } from '@angular/common';
-import { AuthService } from '../../services/auth.service';
+
 
 @Component({
   selector: 'app-pantry-add',
@@ -20,16 +19,9 @@ import { AuthService } from '../../services/auth.service';
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    MatSnackBarModule,
-    AsyncPipe
+    MatSnackBarModule
   ],
   template: `
-    @if (authService.user$ | async; as user) {
-      <div class="auth-bar">
-        <span>Bejelentkezve: {{ user.email || 'Google felhasználó' }}</span>
-        <button mat-button color="warn" (click)="logout()">Kijelentkezés</button>
-      </div>
-    }
     <mat-card>
       <mat-card-header>
         <mat-card-title>Új hozzávaló felvitele</mat-card-title>
@@ -85,11 +77,6 @@ import { AuthService } from '../../services/auth.service';
       margin: 20px auto;
     }
 
-    .auth-bar {
-      display: flex; justify-content: space-between; align-items: center;
-      max-width: 500px; margin: 12px auto; padding: 4px 8px;
-    }
-
     form {
       display: flex;
       flex-direction: column;
@@ -111,8 +98,6 @@ export class PantryAddComponent {
   private formBuilder = inject(FormBuilder);
   private pantryService = inject(PantryService);
   private snackBar = inject(MatSnackBar);
-  protected authService = inject(AuthService);
-
   isLoading = false;
 
   units = [
@@ -133,10 +118,6 @@ export class PantryAddComponent {
     quantity: ['', [Validators.required, Validators.min(0.1)]],
     unit: ['', Validators.required]
   });
-
-  async logout(): Promise<void> {
-    await this.authService.logout();
-  }
 
   async onSubmit(): Promise<void> {
     if (this.pantryForm.valid) {

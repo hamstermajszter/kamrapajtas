@@ -1,0 +1,27 @@
+header.app-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.nav-links .linklike {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #1976d2;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+}
+
+.nav-links a {
+  color: #1976d2;
+  text-decoration: underline;
+}

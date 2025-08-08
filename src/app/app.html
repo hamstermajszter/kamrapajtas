@@ -1,9 +1,13 @@
 <header class="app-header">
   <h1>Kamrapajtás</h1>
   <p>Recept- és menütervező alkalmazás</p>
-  <nav>
+  <nav class="nav-links">
     <a routerLink="/kamra">Kamra</a>
-    <a routerLink="/login">Bejelentkezés</a>
+    @if (auth.user$ | async; as user) {
+      <button class="linklike" (click)="logout()">Kijelentkezés</button>
+    } @else {
+      <a routerLink="/login">Bejelentkezés</a>
+    }
   </nav>
 </header>
 

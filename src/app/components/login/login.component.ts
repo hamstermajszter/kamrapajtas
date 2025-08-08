@@ -42,6 +42,7 @@ import { AuthService } from '../../services/auth.service';
   `,
   styles: [`
     mat-card { max-width: 480px; margin: 24px auto; }
+    form { display: flex; flex-direction: column; gap: 12px; }
     .actions { display: flex; gap: 12px; margin-top: 8px; }
     .divider { text-align: center; margin: 12px 0; color: #666; }
   `]
