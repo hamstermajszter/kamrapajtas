@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -8,6 +8,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { PantryService } from '../../services/pantry.service';
 import { PantryItem } from '../../models/pantry-item.interface';
+import { MatStepperModule } from '@angular/material/stepper';
+import { MatChipsModule } from '@angular/material/chips';
+import { DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 
 @Component({
@@ -19,7 +23,9 @@ import { PantryItem } from '../../models/pantry-item.interface';
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatStepperModule,
+    MatChipsModule
   ],
   template: `
     <mat-card>
@@ -29,44 +35,71 @@ import { PantryItem } from '../../models/pantry-item.interface';
 
       <mat-card-content>
         <form [formGroup]="pantryForm" (ngSubmit)="onSubmit()">
-          <mat-form-field appearance="outline">
-            <mat-label>Megnevezés</mat-label>
-            <input matInput formControlName="name" placeholder="pl. rizs">
-            @if (pantryForm.get('name')?.invalid && pantryForm.get('name')?.touched) {
-              <mat-error>A megnevezés kötelező</mat-error>
-            }
-          </mat-form-field>
+          <mat-horizontal-stepper [linear]="true">
+            <mat-step [stepControl]="pantryForm.get('name')!">
+              <ng-template matStepLabel>Megnevezés</ng-template>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Mennyiség</mat-label>
-            <input matInput type="number" formControlName="quantity" placeholder="pl. 500">
-            @if (pantryForm.get('quantity')?.invalid && pantryForm.get('quantity')?.touched) {
-              <mat-error>A mennyiség kötelező és pozitív szám kell legyen</mat-error>
-            }
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Mértékegység</mat-label>
-            <mat-select formControlName="unit">
-              @for (unit of units; track unit.value) {
-                <mat-option [value]="unit.value">{{ unit.label }}</mat-option>
+              @if (suggestedIngredients.length > 0) {
+                <div class="chips-container">
+                  <div class="chips-label">Gyakori hozzávalók</div>
+                  <mat-chip-set>
+                    @for (chip of suggestedIngredients; track chip) {
+                      <mat-chip (click)="setNameFromChip(chip)">{{ chip }}</mat-chip>
+                    }
+                  </mat-chip-set>
+                </div>
               }
-            </mat-select>
-            @if (pantryForm.get('unit')?.invalid && pantryForm.get('unit')?.touched) {
-              <mat-error>A mértékegység kötelező</mat-error>
-            }
-          </mat-form-field>
 
-          <div class="form-actions">
-            <button mat-raised-button color="primary" type="submit" [disabled]="pantryForm.invalid || isLoading">
-              @if (isLoading) {
-                Mentés...
-              } @else {
-                Hozzáadás
-              }
-            </button>
-            <button mat-button type="button" (click)="resetForm()">Törlés</button>
-          </div>
+              <mat-form-field appearance="outline">
+                <mat-label>Megnevezés</mat-label>
+                <input matInput formControlName="name" placeholder="pl. rizs">
+                @if (pantryForm.get('name')?.invalid && pantryForm.get('name')?.touched) {
+                  <mat-error>A megnevezés kötelező</mat-error>
+                }
+              </mat-form-field>
+
+              <div class="step-actions">
+                <span></span>
+                <button mat-raised-button color="primary" matStepperNext [disabled]="pantryForm.get('name')?.invalid">Tovább</button>
+              </div>
+            </mat-step>
+
+            <mat-step [stepControl]="pantryForm.get('quantity')!">
+              <ng-template matStepLabel>Mennyiség és mértékegység</ng-template>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Mennyiség</mat-label>
+                <input matInput type="number" formControlName="quantity" placeholder="pl. 500">
+                @if (pantryForm.get('quantity')?.invalid && pantryForm.get('quantity')?.touched) {
+                  <mat-error>A mennyiség kötelező és pozitív szám kell legyen</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Mértékegység</mat-label>
+                <mat-select formControlName="unit">
+                  @for (unit of units; track unit.value) {
+                    <mat-option [value]="unit.value">{{ unit.label }}</mat-option>
+                  }
+                </mat-select>
+                @if (pantryForm.get('unit')?.invalid && pantryForm.get('unit')?.touched) {
+                  <mat-error>A mértékegység kötelező</mat-error>
+                }
+              </mat-form-field>
+
+              <div class="form-actions">
+                <button mat-button matStepperPrevious type="button">Vissza</button>
+                <button mat-raised-button color="primary" type="submit" [disabled]="pantryForm.invalid || isLoading">
+                  @if (isLoading) {
+                    Mentés...
+                  } @else {
+                    Hozzáadás
+                  }
+                </button>
+                <button mat-button type="button" (click)="resetForm()">Törlés</button>
+              </div>
+            </mat-step>
+          </mat-horizontal-stepper>
         </form>
       </mat-card-content>
     </mat-card>
@@ -75,6 +108,18 @@ import { PantryItem } from '../../models/pantry-item.interface';
     mat-card {
       max-width: 500px;
       margin: 20px auto;
+    }
+
+    .chips-container {
+      margin-bottom: 8px;
+    }
+
+    .chips-label {
+      margin-bottom: 6px;
+      color: rgba(0,0,0,0.6);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
     }
 
     form {
@@ -92,12 +137,19 @@ import { PantryItem } from '../../models/pantry-item.interface';
     .form-actions button {
       flex: 1;
     }
+
+    .step-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+    }
   `]
 })
-export class PantryAddComponent {
+export class PantryAddComponent implements OnInit {
   private formBuilder = inject(FormBuilder);
   private pantryService = inject(PantryService);
   private snackBar = inject(MatSnackBar);
+  private destroyRef = inject(DestroyRef);
   isLoading = false;
 
   units = [
@@ -118,6 +170,42 @@ export class PantryAddComponent {
     quantity: ['', [Validators.required, Validators.min(0.1)]],
     unit: ['', Validators.required]
   });
+
+  // Ranked by commonness in the app; used to offer top five suggestions
+  private commonIngredients: string[] = [
+    'só', 'cukor', 'liszt', 'olaj', 'rizs',
+    'tojás', 'tej', 'vaj', 'bors', 'tészta',
+    'hagyma', 'fokhagyma', 'paradicsom', 'burgonya', 'ecet',
+    'sütőpor', 'élesztő', 'vajkrém', 'kakaópor', 'vaníliacukor'
+  ];
+
+  suggestedIngredients: string[] = [];
+  private pantryNamesLowercase: Set<string> = new Set<string>();
+
+  ngOnInit(): void {
+    this.pantryService
+      .getPantryItems()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((items: PantryItem[]) => {
+        this.pantryNamesLowercase = new Set(
+          items.map(i => (i.name || '').trim().toLowerCase()).filter(Boolean)
+        );
+        this.recomputeSuggestions();
+      });
+  }
+
+  private recomputeSuggestions(): void {
+    this.suggestedIngredients = this.commonIngredients
+      .filter(name => !this.pantryNamesLowercase.has(name.toLowerCase()))
+      .slice(0, 5);
+  }
+
+  setNameFromChip(name: string): void {
+    const trimmed = (name || '').trim();
+    this.pantryForm.get('name')?.setValue(trimmed);
+    this.pantryForm.get('name')?.markAsTouched();
+    this.pantryForm.get('name')?.updateValueAndValidity();
+  }
 
   async onSubmit(): Promise<void> {
     if (this.pantryForm.valid) {
@@ -156,5 +244,6 @@ export class PantryAddComponent {
     Object.keys(this.pantryForm.controls).forEach(key => {
       this.pantryForm.get(key)?.setErrors(null);
     });
+    this.recomputeSuggestions();
   }
 }
