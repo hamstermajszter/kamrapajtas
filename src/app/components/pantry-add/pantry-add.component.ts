@@ -35,7 +35,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
       <mat-card-content>
         <form [formGroup]="pantryForm" (ngSubmit)="onSubmit()">
-          <mat-horizontal-stepper [linear]="true">
+          <mat-vertical-stepper [linear]="true" #stepper>
             <mat-step [stepControl]="pantryForm.get('name')!">
               <ng-template matStepLabel>Megnevezés</ng-template>
 
@@ -44,7 +44,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                   <div class="chips-label">Gyakori hozzávalók</div>
                   <mat-chip-set>
                     @for (chip of suggestedIngredients; track chip) {
-                      <mat-chip (click)="setNameFromChip(chip)">{{ chip }}</mat-chip>
+                      <mat-chip (click)="setNameFromChip(chip); stepper.next()">{{ chip }}</mat-chip>
                     }
                   </mat-chip-set>
                 </div>
@@ -99,7 +99,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                 <button mat-button type="button" (click)="resetForm()">Törlés</button>
               </div>
             </mat-step>
-          </mat-horizontal-stepper>
+          </mat-vertical-stepper>
         </form>
       </mat-card-content>
     </mat-card>
