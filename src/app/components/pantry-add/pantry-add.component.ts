@@ -237,9 +237,9 @@ export class PantryAddComponent implements OnInit {
         });
 
         this.resetForm();
-      } catch (error) {
-        console.error('Error saving pantry item:', error);
-        this.snackBar.open('Hiba történt a mentés során. Kérjük próbálja újra!', 'Bezár', {
+      } catch (error: any) {
+        const message = (error?.message || error || '').toString().trim() || 'Hiba történt a mentés során. Kérjük próbálja újra!';
+        this.snackBar.open(message, 'Bezár', {
           duration: 5000,
           panelClass: ['error-snackbar']
         });

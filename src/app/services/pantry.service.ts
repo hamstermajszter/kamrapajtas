@@ -42,9 +42,9 @@ export class PantryService {
         userId: user.uid,
         createdAt: serverTimestamp()
       });
-    } catch (error) {
-      console.error('Error adding pantry item:', error);
-      throw new Error('Failed to add pantry item');
+    } catch (error: any) {
+      const errorPrefix = error?.code ? `[${error.code}] ` : '';
+      throw new Error(`${errorPrefix}${error?.message || 'Failed to add pantry item'}`);
     }
   }
 
@@ -64,9 +64,9 @@ export class PantryService {
     try {
       const docRef = doc(this.firestore, 'pantryItems', id);
       await deleteDoc(docRef);
-    } catch (error) {
-      console.error('Error deleting pantry item:', error);
-      throw new Error('Failed to delete pantry item');
+    } catch (error: any) {
+      const errorPrefix = error?.code ? `[${error.code}] ` : '';
+      throw new Error(`${errorPrefix}${error?.message || 'Failed to delete pantry item'}`);
     }
   }
 
@@ -74,9 +74,9 @@ export class PantryService {
     try {
       const docRef = doc(this.firestore, 'pantryItems', id);
       await updateDoc(docRef, updates);
-    } catch (error) {
-      console.error('Error updating pantry item:', error);
-      throw new Error('Failed to update pantry item');
+    } catch (error: any) {
+      const errorPrefix = error?.code ? `[${error.code}] ` : '';
+      throw new Error(`${errorPrefix}${error?.message || 'Failed to update pantry item'}`);
     }
   }
 }
