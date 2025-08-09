@@ -1,17 +1,15 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { PantryService } from '../../services/pantry.service';
-import { PantryItem } from '../../models/pantry-item.interface';
 import { MatStepperModule } from '@angular/material/stepper';
-import { MatChipsModule } from '@angular/material/chips';
-import { DestroyRef } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { PantryItem } from '../../models/pantry-item.interface';
+import { PantryService } from '../../services/pantry.service';
 import { PantryListComponent } from '../pantry-list/pantry-list.component';
 
 
@@ -29,6 +27,7 @@ import { PantryListComponent } from '../pantry-list/pantry-list.component';
     MatChipsModule,
     PantryListComponent
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <mat-card>
       <mat-card-header>
@@ -41,11 +40,11 @@ import { PantryListComponent } from '../pantry-list/pantry-list.component';
             <mat-step [stepControl]="pantryForm.get('name')!">
               <ng-template matStepLabel>{{ nameStepLabel }}</ng-template>
 
-              @if (suggestedIngredients.length > 0) {
+              @if (suggestedIngredients().length > 0) {
                 <div class="chips-container">
                   <div class="chips-label">Gyakori hozzávalók</div>
                   <mat-chip-set>
-                    @for (chip of suggestedIngredients; track chip) {
+                    @for (chip of suggestedIngredients(); track chip) {
                       <mat-chip (click)="setNameFromChip(chip); stepper.next()">{{ chip }}</mat-chip>
                     }
                   </mat-chip-set>
@@ -120,7 +119,7 @@ import { PantryListComponent } from '../pantry-list/pantry-list.component';
 
     .chips-label {
       margin-bottom: 6px;
-      color: rgba(0,0,0,0.6);
+      color: var(--mat-sys-on-surface-variant);
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: .5px;
@@ -149,7 +148,7 @@ import { PantryListComponent } from '../pantry-list/pantry-list.component';
     }
   `]
 })
-export class PantryAddComponent implements OnInit {
+export class PantryAddComponent {
   private formBuilder = inject(FormBuilder);
   private pantryService = inject(PantryService);
   private snackBar = inject(MatSnackBar);
@@ -183,36 +182,20 @@ export class PantryAddComponent implements OnInit {
     'sütőpor', 'élesztő', 'vajkrém', 'kakaópor', 'vaníliacukor'
   ];
 
-  suggestedIngredients: string[] = [];
-  private pantryNamesLowercase: Set<string> = new Set<string>();
+  suggestedIngredients = computed(() =>
+    this.commonIngredients
+      .filter(name => !this.pantryNamesLowercase().has(name.toLowerCase()))
+      .slice(0, 5)
+  );
+  private pantryNamesLowercase = computed<Set<string>>(() => new Set(
+    this.pantryService.pantryItemsSig().map(i => (i.name || '').trim().toLowerCase()).filter(Boolean)
+  ));
 
   get nameStepLabel(): string {
     const raw = this.pantryForm.get('name')?.value as string | null | undefined;
     const name = (raw || '').trim();
     return `Megnevezés${name ? ': ' + name : ''}`;
   }
-
-  ngOnInit(): void {
-    // Show suggestions immediately on first render
-    this.recomputeSuggestions();
-
-    this.pantryService
-      .getPantryItems()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((items: PantryItem[]) => {
-        this.pantryNamesLowercase = new Set(
-          items.map(i => (i.name || '').trim().toLowerCase()).filter(Boolean)
-        );
-        this.recomputeSuggestions();
-      });
-  }
-
-  private recomputeSuggestions(): void {
-    this.suggestedIngredients = this.commonIngredients
-      .filter(name => !this.pantryNamesLowercase.has(name.toLowerCase()))
-      .slice(0, 5);
-  }
-
   setNameFromChip(name: string): void {
     const trimmed = (name || '').trim();
     this.pantryForm.get('name')?.setValue(trimmed);
@@ -257,6 +240,5 @@ export class PantryAddComponent implements OnInit {
     Object.keys(this.pantryForm.controls).forEach(key => {
       this.pantryForm.get(key)?.setErrors(null);
     });
-    this.recomputeSuggestions();
   }
 }

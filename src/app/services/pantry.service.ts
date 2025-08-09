@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, OnDestroy, signal } from '@angular/core';
 import {
   Firestore,
   collection,
@@ -14,20 +14,41 @@ import {
   orderBy,
   where
 } from '@angular/fire/firestore';
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subscription } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { PantryItem } from '../models/pantry-item.interface';
-import { Auth } from '@angular/fire/auth';
+import { Auth, authState } from '@angular/fire/auth';
 
 @Injectable({
   providedIn: 'root'
 })
-export class PantryService {
+export class PantryService implements OnDestroy {
   private firestore = inject(Firestore);
   private auth = inject(Auth);
   private pantryCollection: CollectionReference<DocumentData>;
+  private subscription: Subscription | null = null;
+
+  // Signal for components to consume
+  readonly pantryItemsSig = signal<PantryItem[]>([]);
 
   constructor() {
     this.pantryCollection = collection(this.firestore, 'pantryItems');
+    // Subscribe once and feed the signal; zoneless-friendly
+    this.subscription = authState(this.auth)
+      .pipe(
+        switchMap(user => {
+          if (!user) {
+            return of([] as PantryItem[]);
+          }
+          const q = query(
+            this.pantryCollection,
+            where('userId', '==', user.uid),
+            orderBy('createdAt', 'desc')
+          );
+          return collectionData(q, { idField: 'id' }) as Observable<PantryItem[]>;
+        })
+      )
+      .subscribe(items => this.pantryItemsSig.set(items));
   }
 
   async addPantryItem(item: Omit<PantryItem, 'id' | 'createdAt'>): Promise<void> {
@@ -47,13 +68,8 @@ export class PantryService {
     }
   }
 
-  getPantryItems(): Observable<PantryItem[]> {
-    const user = this.auth.currentUser;
-    if (!user) {
-      return of([] as PantryItem[]);
-    }
-    const q = query(this.pantryCollection, where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
-    return collectionData(q, { idField: 'id' }) as Observable<PantryItem[]>;
+  ngOnDestroy(): void {
+    this.subscription?.unsubscribe();
   }
 
   async deletePantryItem(id: string): Promise<void> {

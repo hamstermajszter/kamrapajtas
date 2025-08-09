@@ -21,3 +21,9 @@ header.app-header {
 .nav-links a {
   text-decoration: none;
 }
+
+/* A header hátteréhez illeszkedő kontrasztos felirat */
+.nav-links a.mat-mdc-button-base .mdc-button__label,
+.nav-links button.mat-mdc-button-base .mdc-button__label {
+  color: var(--mat-sys-on-primary-container);
+}
