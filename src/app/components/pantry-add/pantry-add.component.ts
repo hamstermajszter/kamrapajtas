@@ -37,7 +37,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         <form [formGroup]="pantryForm" (ngSubmit)="onSubmit()">
           <mat-vertical-stepper [linear]="true" #stepper>
             <mat-step [stepControl]="pantryForm.get('name')!">
-              <ng-template matStepLabel>Megnevezés</ng-template>
+              <ng-template matStepLabel>{{ nameStepLabel }}</ng-template>
 
               @if (suggestedIngredients.length > 0) {
                 <div class="chips-container">
@@ -181,6 +181,12 @@ export class PantryAddComponent implements OnInit {
 
   suggestedIngredients: string[] = [];
   private pantryNamesLowercase: Set<string> = new Set<string>();
+
+  get nameStepLabel(): string {
+    const raw = this.pantryForm.get('name')?.value as string | null | undefined;
+    const name = (raw || '').trim();
+    return `Megnevezés${name ? ': ' + name : ''}`;
+  }
 
   ngOnInit(): void {
     // Show suggestions immediately on first render
