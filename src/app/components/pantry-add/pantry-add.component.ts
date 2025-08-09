@@ -12,6 +12,8 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { MatChipsModule } from '@angular/material/chips';
 import { DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatTableModule } from '@angular/material/table';
+import { MatIconModule } from '@angular/material/icon';
 
 
 @Component({
@@ -25,7 +27,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     MatButtonModule,
     MatSnackBarModule,
     MatStepperModule,
-    MatChipsModule
+    MatChipsModule,
+    MatTableModule,
+    MatIconModule
   ],
   template: `
     <mat-card>
@@ -103,6 +107,46 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         </form>
       </mat-card-content>
     </mat-card>
+
+    <mat-card class="pantry-list-card">
+      <mat-card-header>
+        <mat-card-title>Kamra</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (pantryItems.length === 0) {
+          <div class="empty-state">Jelenleg nincs hozzávaló a kamrában.</div>
+        } @else {
+          <table mat-table [dataSource]="pantryItems" class="mat-elevation-z1 full-width">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Megnevezés</th>
+              <td mat-cell *matCellDef="let item">{{ item.name }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="quantity">
+              <th mat-header-cell *matHeaderCellDef>Mennyiség</th>
+              <td mat-cell *matCellDef="let item">{{ item.quantity }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="unit">
+              <th mat-header-cell *matHeaderCellDef>Mértékegység</th>
+              <td mat-cell *matCellDef="let item">{{ item.unit }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let item" class="actions-cell">
+                <button mat-icon-button color="warn" (click)="onDelete(item)" aria-label="Törlés">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        }
+      </mat-card-content>
+    </mat-card>
   `,
   styles: [`
     mat-card {
@@ -143,6 +187,25 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       justify-content: space-between;
       margin-top: 8px;
     }
+
+    .pantry-list-card {
+      max-width: 900px;
+      margin: 12px auto 24px;
+    }
+
+    .full-width {
+      width: 100%;
+    }
+
+    .actions-cell {
+      text-align: right;
+    }
+
+    .empty-state {
+      color: rgba(0,0,0,0.6);
+      font-style: italic;
+      padding: 8px 0;
+    }
   `]
 })
 export class PantryAddComponent implements OnInit {
@@ -182,6 +245,9 @@ export class PantryAddComponent implements OnInit {
   suggestedIngredients: string[] = [];
   private pantryNamesLowercase: Set<string> = new Set<string>();
 
+  pantryItems: PantryItem[] = [];
+  displayedColumns: string[] = ['name', 'quantity', 'unit', 'actions'];
+
   get nameStepLabel(): string {
     const raw = this.pantryForm.get('name')?.value as string | null | undefined;
     const name = (raw || '').trim();
@@ -196,6 +262,7 @@ export class PantryAddComponent implements OnInit {
       .getPantryItems()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((items: PantryItem[]) => {
+        this.pantryItems = items;
         this.pantryNamesLowercase = new Set(
           items.map(i => (i.name || '').trim().toLowerCase()).filter(Boolean)
         );
@@ -245,6 +312,22 @@ export class PantryAddComponent implements OnInit {
       } finally {
         this.isLoading = false;
       }
+    }
+  }
+
+  async onDelete(item: PantryItem): Promise<void> {
+    try {
+      await this.pantryService.deletePantryItem(item.id);
+      this.snackBar.open('Hozzávaló törölve', 'Bezár', {
+        duration: 3000,
+        panelClass: ['success-snackbar']
+      });
+    } catch (error) {
+      console.error('Error deleting pantry item:', error);
+      this.snackBar.open('Hiba történt a törlés során. Kérjük próbálja újra!', 'Bezár', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      });
     }
   }
 
