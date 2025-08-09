@@ -12,6 +12,7 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { MatChipsModule } from '@angular/material/chips';
 import { DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { PantryListComponent } from '../pantry-list/pantry-list.component';
 
 
 @Component({
@@ -25,7 +26,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     MatButtonModule,
     MatSnackBarModule,
     MatStepperModule,
-    MatChipsModule
+    MatChipsModule,
+    PantryListComponent
   ],
   template: `
     <mat-card>
@@ -103,6 +105,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         </form>
       </mat-card-content>
     </mat-card>
+
+    <app-pantry-list></app-pantry-list>
   `,
   styles: [`
     mat-card {
