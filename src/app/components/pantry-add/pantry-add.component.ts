@@ -16,6 +16,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-pantry-add',
+  standalone: true,
   imports: [
     ReactiveFormsModule,
     MatCardModule,
