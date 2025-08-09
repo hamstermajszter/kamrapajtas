@@ -14,9 +14,9 @@ import {
   orderBy,
   where
 } from '@angular/fire/firestore';
-import { Observable, of } from 'rxjs';
+import { Observable, of, switchMap } from 'rxjs';
 import { PantryItem } from '../models/pantry-item.interface';
-import { Auth } from '@angular/fire/auth';
+import { Auth, authState } from '@angular/fire/auth';
 
 @Injectable({
   providedIn: 'root'
@@ -48,12 +48,15 @@ export class PantryService {
   }
 
   getPantryItems(): Observable<PantryItem[]> {
-    const user = this.auth.currentUser;
-    if (!user) {
-      return of([] as PantryItem[]);
-    }
-    const q = query(this.pantryCollection, where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
-    return collectionData(q, { idField: 'id' }) as Observable<PantryItem[]>;
+    return authState(this.auth).pipe(
+      switchMap(user => {
+        if (!user) {
+          return of([] as PantryItem[]);
+        }
+        const q = query(this.pantryCollection, where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
+        return collectionData(q, { idField: 'id' }) as Observable<PantryItem[]>;
+      })
+    );
   }
 
   async deletePantryItem(id: string): Promise<void> {
