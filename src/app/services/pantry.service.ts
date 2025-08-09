@@ -14,7 +14,7 @@ import {
   orderBy,
   where
 } from '@angular/fire/firestore';
-import { Observable, of } from 'rxjs';
+import { Observable, of, firstValueFrom } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { PantryItem } from '../models/pantry-item.interface';
 import { Auth, authState } from '@angular/fire/auth';
@@ -32,7 +32,7 @@ export class PantryService {
   }
 
   async addPantryItem(item: Omit<PantryItem, 'id' | 'createdAt'>): Promise<void> {
-    const user = this.auth.currentUser;
+    const user = await firstValueFrom(authState(this.auth));
     if (!user) {
       throw new Error('Not authenticated');
     }
