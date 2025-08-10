@@ -15,6 +15,8 @@ import { findIngredientCategoryByName } from '../../models/ingredients.data';
 import { IngredientCategory } from '../../models/ingredient.interface';
 import { MatSliderModule } from '@angular/material/slider';
 import { FormsModule } from '@angular/forms';
+import { NgComponentOutlet } from '@angular/common';
+import { getStrategyComponentForCategory } from '../amount-strategies/strategy-map';
 
 
 @Component({
@@ -31,6 +33,7 @@ import { FormsModule } from '@angular/forms';
     MatStepperModule,
     MatChipsModule,
     MatSliderModule,
+    NgComponentOutlet,
     PantryListComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -74,32 +77,7 @@ import { FormsModule } from '@angular/forms';
             <mat-step [stepControl]="pantryForm.get('quantity')!">
               <ng-template matStepLabel>Mennyiség és mértékegység</ng-template>
 
-              @if (category === 'eggs') {
-                <div class="chips-container">
-                  <div class="chips-label">Válassz tojás darabszámot</div>
-                  <mat-chip-set>
-                    @for (count of eggChipValues; track count) {
-                      <mat-chip (click)="selectEggs(count)">{{ count }} db</mat-chip>
-                    }
-                  </mat-chip-set>
-                </div>
-              } @else if (category === 'meat') {
-                <div class="meat-quantity">
-                  <mat-slider min="0" max="2000" step="50" [ngModel]="pantryForm.get('quantity')?.value || 0" (ngModelChange)="setQuantity($event)"></mat-slider>
-                  <mat-form-field appearance="outline">
-                    <mat-label>Mennyiség (gramm)</mat-label>
-                    <input matInput type="number" formControlName="quantity" placeholder="pl. 500">
-                  </mat-form-field>
-                </div>
-              } @else {
-                <mat-form-field appearance="outline">
-                  <mat-label>Mennyiség</mat-label>
-                  <input matInput type="number" formControlName="quantity" placeholder="pl. 500">
-                  @if (pantryForm.get('quantity')?.invalid && pantryForm.get('quantity')?.touched) {
-                    <mat-error>A mennyiség kötelező és pozitív szám kell legyen</mat-error>
-                  }
-                </mat-form-field>
-              }
+              <ng-container *ngComponentOutlet="strategyComponent; inputs: strategyInputs"></ng-container>
 
               <mat-form-field appearance="outline">
                 <mat-label>Mértékegység</mat-label>
@@ -171,13 +149,6 @@ import { FormsModule } from '@angular/forms';
       justify-content: space-between;
       margin-top: 8px;
     }
-
-    .meat-quantity {
-      display: grid;
-      grid-template-columns: 1fr 160px;
-      align-items: center;
-      gap: 12px;
-    }
   `]
 })
 export class PantryAddComponent {
@@ -201,6 +172,14 @@ export class PantryAddComponent {
   ];
 
   eggChipValues: number[] = [1, 2, 4, 6, 10, 12];
+
+  get strategyComponent() {
+    return getStrategyComponentForCategory(this.category);
+  }
+
+  get strategyInputs() {
+    return { form: this.pantryForm, units: this.units };
+  }
 
   pantryForm: FormGroup = this.formBuilder.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
@@ -240,21 +219,6 @@ export class PantryAddComponent {
   get category(): IngredientCategory {
     const raw = this.pantryForm.get('name')?.value as string | null | undefined;
     return findIngredientCategoryByName(raw);
-  }
-
-  selectEggs(count: number): void {
-    this.pantryForm.get('quantity')?.setValue(count);
-    this.pantryForm.get('unit')?.setValue('db');
-    this.pantryForm.get('quantity')?.markAsTouched();
-    this.pantryForm.get('unit')?.markAsTouched();
-  }
-
-  setQuantity(value: number | null): void {
-    const safe = value == null ? 0 : value;
-    this.pantryForm.get('quantity')?.setValue(safe);
-    if (!this.pantryForm.get('unit')?.value) {
-      this.pantryForm.get('unit')?.setValue('g');
-    }
   }
 
   constructor() {
