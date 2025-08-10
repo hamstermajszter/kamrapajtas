@@ -31,17 +31,26 @@ import { CommonModule } from '@angular/common';
         } @else {
           <table mat-table [dataSource]="pantryItemsSig()" class="mat-elevation-z1 full-width">
             <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>Megnevezés</th>
+              <th mat-header-cell *matHeaderCellDef>
+                <span class="label-desktop">Megnevezés</span>
+                <abbr class="label-mobile" title="Megnevezés">Név</abbr>
+              </th>
               <td mat-cell *matCellDef="let item">{{ item.name }}</td>
             </ng-container>
 
             <ng-container matColumnDef="quantity">
-              <th mat-header-cell *matHeaderCellDef>Mennyiség</th>
+              <th mat-header-cell *matHeaderCellDef>
+                <span class="label-desktop">Mennyiség</span>
+                <abbr class="label-mobile" title="Mennyiség">Menny.</abbr>
+              </th>
               <td mat-cell *matCellDef="let item">{{ item.quantity }}</td>
             </ng-container>
 
             <ng-container matColumnDef="unit">
-              <th mat-header-cell *matHeaderCellDef>Mértékegység</th>
+              <th mat-header-cell *matHeaderCellDef>
+                <span class="label-desktop">Mértékegység</span>
+                <abbr class="label-mobile" title="Mértékegység">ME</abbr>
+              </th>
               <td mat-cell *matCellDef="let item">{{ item.unit }}</td>
             </ng-container>
 
@@ -79,6 +88,14 @@ import { CommonModule } from '@angular/common';
       color: var(--mat-sys-on-surface-variant);
       font-style: italic;
       padding: 8px 0;
+    }
+
+    /* Responsive header labels */
+    .label-mobile { display: none; }
+    .label-desktop { display: inline; }
+    @media (max-width: 600px) {
+      .label-desktop { display: none; }
+      .label-mobile { display: inline; }
     }
   `]
 })
