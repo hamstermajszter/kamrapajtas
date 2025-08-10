@@ -218,14 +218,8 @@ export class PantryAddComponent {
     const sub = this.pantryForm.get('name')?.valueChanges.subscribe((val: string) => {
       const cat = findIngredientCategoryByName(val);
       const unitCtrl = this.pantryForm.get('unit');
-      if (cat === 'eggs') {
-        if (unitCtrl?.value !== 'db') {
-          unitCtrl?.setValue('db');
-        }
-      } else if (cat === 'meat') {
-        if (!unitCtrl?.value) {
-          unitCtrl?.setValue('g');
-        }
+      if (unitCtrl?.value !== cat.defaultUnit) {
+        unitCtrl?.setValue(cat.defaultUnit);
       }
     });
     this.destroyRef.onDestroy(() => sub?.unsubscribe());

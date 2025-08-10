@@ -5,7 +5,7 @@ import { MeatAmountUnitComponent } from './meat-amount-unit.component';
 import { DefaultAmountUnitComponent } from './default-amount-unit.component';
 
 export function getStrategyComponentForCategory(category: IngredientCategory): Type<any> {
-  switch (category) {
+  switch (category.id) {
     case 'eggs':
       return EggsAmountUnitComponent;
     case 'meat':

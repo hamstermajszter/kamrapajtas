@@ -1,4 +1,25 @@
-import { Ingredient, IngredientCategory } from './ingredient.interface';
+import { Ingredient, IngredientCategory, IngredientCategoryId } from './ingredient.interface';
+
+export const CATEGORIES: Record<IngredientCategoryId, IngredientCategory> = {
+  meat: { id: 'meat', label: 'Húsok', defaultUnit: 'g' },
+  eggs: { id: 'eggs', label: 'Tojás', defaultUnit: 'db' },
+  dairy: { id: 'dairy', label: 'Tejtermékek', defaultUnit: 'g' },
+  produce: { id: 'produce', label: 'Zöldség/gyümölcs', defaultUnit: 'g' },
+  grains: { id: 'grains', label: 'Gabonák', defaultUnit: 'g' },
+  spices: { id: 'spices', label: 'Fűszerek', defaultUnit: 'tk' },
+  baking: { id: 'baking', label: 'Sütés', defaultUnit: 'g' },
+  sweets: { id: 'sweets', label: 'Édességek', defaultUnit: 'g' },
+  bakery: { id: 'bakery', label: 'Pékáru', defaultUnit: 'db' },
+  condiments: { id: 'condiments', label: 'Szószok', defaultUnit: 'ml' },
+  oils: { id: 'oils', label: 'Olajok', defaultUnit: 'ml' },
+  seafood: { id: 'seafood', label: 'Tenger gyümölcsei', defaultUnit: 'g' },
+  canned: { id: 'canned', label: 'Konzerv', defaultUnit: 'doboz' },
+  legumes: { id: 'legumes', label: 'Hüvelyesek', defaultUnit: 'g' },
+  nutsSeeds: { id: 'nutsSeeds', label: 'Magvak', defaultUnit: 'g' },
+  beverages: { id: 'beverages', label: 'Italok', defaultUnit: 'ml' },
+  frozen: { id: 'frozen', label: 'Fagyasztott', defaultUnit: 'g' },
+  other: { id: 'other', label: 'Egyéb', defaultUnit: 'db' },
+};
 
 export const INGREDIENTS: Ingredient[] = [
   { name: 'só', category: 'spices' },
@@ -105,7 +126,7 @@ export const INGREDIENTS: Ingredient[] = [
 
 export function findIngredientCategoryByName(name: string | null | undefined): IngredientCategory {
   const normalized = (name || '').trim().toLowerCase();
-  if (!normalized) return 'other';
+  if (!normalized) return CATEGORIES.other;
   const found = INGREDIENTS.find(i => i.name.toLowerCase() === normalized);
-  return found ? found.category as IngredientCategory : 'other';
+  return found ? CATEGORIES[found.category] : CATEGORIES.other;
 }

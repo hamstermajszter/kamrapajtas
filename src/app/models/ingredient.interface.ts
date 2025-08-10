@@ -1,4 +1,4 @@
-export type IngredientCategory =
+export type IngredientCategoryId =
   | 'meat'
   | 'eggs'
   | 'dairy'
@@ -18,7 +18,13 @@ export type IngredientCategory =
   | 'frozen'
   | 'other';
 
+export interface IngredientCategory {
+  id: IngredientCategoryId;
+  label: string;
+  defaultUnit: string;
+}
+
 export interface Ingredient {
   name: string;
-  category: IngredientCategory;
+  category: IngredientCategoryId;
 }
