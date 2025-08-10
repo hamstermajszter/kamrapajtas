@@ -11,12 +11,17 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { PantryItem } from '../../models/pantry-item.interface';
 import { PantryService } from '../../services/pantry.service';
 import { PantryListComponent } from '../pantry-list/pantry-list.component';
+import { findIngredientCategoryByName } from '../../models/ingredients.data';
+import { IngredientCategory } from '../../models/ingredient.interface';
+import { MatSliderModule } from '@angular/material/slider';
+import { FormsModule } from '@angular/forms';
 
 
 @Component({
   selector: 'app-pantry-add',
   imports: [
     ReactiveFormsModule,
+    FormsModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -25,6 +30,7 @@ import { PantryListComponent } from '../pantry-list/pantry-list.component';
     MatSnackBarModule,
     MatStepperModule,
     MatChipsModule,
+    MatSliderModule,
     PantryListComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -68,13 +74,32 @@ import { PantryListComponent } from '../pantry-list/pantry-list.component';
             <mat-step [stepControl]="pantryForm.get('quantity')!">
               <ng-template matStepLabel>Mennyiség és mértékegység</ng-template>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Mennyiség</mat-label>
-                <input matInput type="number" formControlName="quantity" placeholder="pl. 500">
-                @if (pantryForm.get('quantity')?.invalid && pantryForm.get('quantity')?.touched) {
-                  <mat-error>A mennyiség kötelező és pozitív szám kell legyen</mat-error>
-                }
-              </mat-form-field>
+              @if (category === 'eggs') {
+                <div class="chips-container">
+                  <div class="chips-label">Válassz tojás darabszámot</div>
+                  <mat-chip-set>
+                    @for (count of eggChipValues; track count) {
+                      <mat-chip (click)="selectEggs(count)">{{ count }} db</mat-chip>
+                    }
+                  </mat-chip-set>
+                </div>
+              } @else if (category === 'meat') {
+                <div class="meat-quantity">
+                  <mat-slider min="0" max="2000" step="50" [ngModel]="pantryForm.get('quantity')?.value || 0" (ngModelChange)="setQuantity($event)"></mat-slider>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Mennyiség (gramm)</mat-label>
+                    <input matInput type="number" formControlName="quantity" placeholder="pl. 500">
+                  </mat-form-field>
+                </div>
+              } @else {
+                <mat-form-field appearance="outline">
+                  <mat-label>Mennyiség</mat-label>
+                  <input matInput type="number" formControlName="quantity" placeholder="pl. 500">
+                  @if (pantryForm.get('quantity')?.invalid && pantryForm.get('quantity')?.touched) {
+                    <mat-error>A mennyiség kötelező és pozitív szám kell legyen</mat-error>
+                  }
+                </mat-form-field>
+              }
 
               <mat-form-field appearance="outline">
                 <mat-label>Mértékegység</mat-label>
@@ -146,6 +171,13 @@ import { PantryListComponent } from '../pantry-list/pantry-list.component';
       justify-content: space-between;
       margin-top: 8px;
     }
+
+    .meat-quantity {
+      display: grid;
+      grid-template-columns: 1fr 160px;
+      align-items: center;
+      gap: 12px;
+    }
   `]
 })
 export class PantryAddComponent {
@@ -167,6 +199,8 @@ export class PantryAddComponent {
     { value: 'doboz', label: 'doboz' },
     { value: 'üveg', label: 'üveg' }
   ];
+
+  eggChipValues: number[] = [1, 2, 4, 6, 10, 12];
 
   pantryForm: FormGroup = this.formBuilder.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
@@ -201,6 +235,43 @@ export class PantryAddComponent {
     this.pantryForm.get('name')?.setValue(trimmed);
     this.pantryForm.get('name')?.markAsTouched();
     this.pantryForm.get('name')?.updateValueAndValidity();
+  }
+
+  get category(): IngredientCategory {
+    const raw = this.pantryForm.get('name')?.value as string | null | undefined;
+    return findIngredientCategoryByName(raw);
+  }
+
+  selectEggs(count: number): void {
+    this.pantryForm.get('quantity')?.setValue(count);
+    this.pantryForm.get('unit')?.setValue('db');
+    this.pantryForm.get('quantity')?.markAsTouched();
+    this.pantryForm.get('unit')?.markAsTouched();
+  }
+
+  setQuantity(value: number | null): void {
+    const safe = value == null ? 0 : value;
+    this.pantryForm.get('quantity')?.setValue(safe);
+    if (!this.pantryForm.get('unit')?.value) {
+      this.pantryForm.get('unit')?.setValue('g');
+    }
+  }
+
+  constructor() {
+    const sub = this.pantryForm.get('name')?.valueChanges.subscribe((val: string) => {
+      const cat = findIngredientCategoryByName(val);
+      const unitCtrl = this.pantryForm.get('unit');
+      if (cat === 'eggs') {
+        if (unitCtrl?.value !== 'db') {
+          unitCtrl?.setValue('db');
+        }
+      } else if (cat === 'meat') {
+        if (!unitCtrl?.value) {
+          unitCtrl?.setValue('g');
+        }
+      }
+    });
+    this.destroyRef.onDestroy(() => sub?.unsubscribe());
   }
 
   async onSubmit(): Promise<void> {
