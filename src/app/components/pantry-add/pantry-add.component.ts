@@ -160,8 +160,6 @@ export class PantryAddComponent {
     { value: 'üveg', label: 'üveg' }
   ];
 
-  eggChipValues: number[] = [1, 2, 4, 6, 10, 12];
-
   get strategyComponent() {
     return getStrategyComponentForCategory(this.category);
   }

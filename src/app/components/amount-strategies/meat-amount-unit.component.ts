@@ -6,6 +6,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FormControl } from '@angular/forms';
 import { input } from '@angular/core';
 import { AmountUnitStrategy } from './amount-unit-strategy.types';
+import { findIngredientCategoryByName } from '../../models/ingredients.data';
 
 @Component({
   selector: 'app-meat-amount-unit',
@@ -34,11 +35,13 @@ export class MeatAmountUnitComponent implements AmountUnitStrategy {
   }
 
   setQuantity(value: number | null): void {
-    const unit = this.form().get('unit');
+    const nameCtrl = this.form().get('name');
+    const unitCtrl = this.form().get('unit');
     const safe = value == null ? 0 : value;
     this.quantityCtrl.setValue(safe);
-    if (!unit?.value) {
-      unit?.setValue('g');
+    const cat = findIngredientCategoryByName(nameCtrl?.value as string | null | undefined);
+    if (unitCtrl && unitCtrl.value !== cat.defaultUnit) {
+      unitCtrl.setValue(cat.defaultUnit);
     }
   }
 }
