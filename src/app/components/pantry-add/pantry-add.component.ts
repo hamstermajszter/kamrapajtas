@@ -11,12 +11,20 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { PantryItem } from '../../models/pantry-item.interface';
 import { PantryService } from '../../services/pantry.service';
 import { PantryListComponent } from '../pantry-list/pantry-list.component';
+import { findIngredientCategoryByName } from '../../models/ingredients.data';
+import { IngredientCategory } from '../../models/ingredient.interface';
+import { MatSliderModule } from '@angular/material/slider';
+import { FormsModule } from '@angular/forms';
+import { NgComponentOutlet } from '@angular/common';
+import { getStrategyComponentForCategory } from '../amount-strategies/strategy-map';
+import { AmountUnitStrategyInputs } from '../amount-strategies/amount-unit-strategy.types';
 
 
 @Component({
   selector: 'app-pantry-add',
   imports: [
     ReactiveFormsModule,
+    FormsModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -25,6 +33,8 @@ import { PantryListComponent } from '../pantry-list/pantry-list.component';
     MatSnackBarModule,
     MatStepperModule,
     MatChipsModule,
+    MatSliderModule,
+    NgComponentOutlet,
     PantryListComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -68,25 +78,7 @@ import { PantryListComponent } from '../pantry-list/pantry-list.component';
             <mat-step [stepControl]="pantryForm.get('quantity')!">
               <ng-template matStepLabel>Mennyiség és mértékegység</ng-template>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Mennyiség</mat-label>
-                <input matInput type="number" formControlName="quantity" placeholder="pl. 500">
-                @if (pantryForm.get('quantity')?.invalid && pantryForm.get('quantity')?.touched) {
-                  <mat-error>A mennyiség kötelező és pozitív szám kell legyen</mat-error>
-                }
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Mértékegység</mat-label>
-                <mat-select formControlName="unit">
-                  @for (unit of units; track unit.value) {
-                    <mat-option [value]="unit.value">{{ unit.label }}</mat-option>
-                  }
-                </mat-select>
-                @if (pantryForm.get('unit')?.invalid && pantryForm.get('unit')?.touched) {
-                  <mat-error>A mértékegység kötelező</mat-error>
-                }
-              </mat-form-field>
+              <ng-container *ngComponentOutlet="strategyComponent; inputs: strategyInputsRecord"></ng-container>
 
               <div class="form-actions">
                 <button mat-button matStepperPrevious type="button">Vissza</button>
@@ -168,6 +160,18 @@ export class PantryAddComponent {
     { value: 'üveg', label: 'üveg' }
   ];
 
+  get strategyComponent() {
+    return getStrategyComponentForCategory(this.category);
+  }
+
+  get strategyInputs(): AmountUnitStrategyInputs {
+    return { form: this.pantryForm, units: this.units };
+  }
+
+  get strategyInputsRecord(): Record<string, unknown> {
+    return this.strategyInputs as unknown as Record<string, unknown>;
+  }
+
   pantryForm: FormGroup = this.formBuilder.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
     quantity: ['', [Validators.required, Validators.min(0.1)]],
@@ -201,6 +205,22 @@ export class PantryAddComponent {
     this.pantryForm.get('name')?.setValue(trimmed);
     this.pantryForm.get('name')?.markAsTouched();
     this.pantryForm.get('name')?.updateValueAndValidity();
+  }
+
+  get category(): IngredientCategory {
+    const raw = this.pantryForm.get('name')?.value as string | null | undefined;
+    return findIngredientCategoryByName(raw);
+  }
+
+  constructor() {
+    const sub = this.pantryForm.get('name')?.valueChanges.subscribe((val: string) => {
+      const cat = findIngredientCategoryByName(val);
+      const unitCtrl = this.pantryForm.get('unit');
+      if (unitCtrl?.value !== cat.defaultUnit) {
+        unitCtrl?.setValue(cat.defaultUnit);
+      }
+    });
+    this.destroyRef.onDestroy(() => sub?.unsubscribe());
   }
 
   async onSubmit(): Promise<void> {
