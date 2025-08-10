@@ -17,6 +17,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { FormsModule } from '@angular/forms';
 import { NgComponentOutlet } from '@angular/common';
 import { getStrategyComponentForCategory } from '../amount-strategies/strategy-map';
+import { AmountUnitStrategyInputs } from '../amount-strategies/amount-unit-strategy.types';
 
 
 @Component({
@@ -77,19 +78,7 @@ import { getStrategyComponentForCategory } from '../amount-strategies/strategy-m
             <mat-step [stepControl]="pantryForm.get('quantity')!">
               <ng-template matStepLabel>Mennyiség és mértékegység</ng-template>
 
-              <ng-container *ngComponentOutlet="strategyComponent; inputs: strategyInputs"></ng-container>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Mértékegység</mat-label>
-                <mat-select formControlName="unit">
-                  @for (unit of units; track unit.value) {
-                    <mat-option [value]="unit.value">{{ unit.label }}</mat-option>
-                  }
-                </mat-select>
-                @if (pantryForm.get('unit')?.invalid && pantryForm.get('unit')?.touched) {
-                  <mat-error>A mértékegység kötelező</mat-error>
-                }
-              </mat-form-field>
+              <ng-container *ngComponentOutlet="strategyComponent; inputs: strategyInputsRecord"></ng-container>
 
               <div class="form-actions">
                 <button mat-button matStepperPrevious type="button">Vissza</button>
@@ -177,8 +166,12 @@ export class PantryAddComponent {
     return getStrategyComponentForCategory(this.category);
   }
 
-  get strategyInputs() {
+  get strategyInputs(): AmountUnitStrategyInputs {
     return { form: this.pantryForm, units: this.units };
+  }
+
+  get strategyInputsRecord(): Record<string, unknown> {
+    return this.strategyInputs as unknown as Record<string, unknown>;
   }
 
   pantryForm: FormGroup = this.formBuilder.group({
