@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, effect } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -18,6 +18,7 @@ import { FormsModule } from '@angular/forms';
 import { NgComponentOutlet } from '@angular/common';
 import { getStrategyComponentForCategory } from '../amount-strategies/strategy-map';
 import { AmountUnitStrategyInputs } from '../amount-strategies/amount-unit-strategy.types';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 
 @Component({
@@ -180,7 +181,7 @@ export class PantryAddComponent {
 
   // Ranked by commonness in the app; used to offer top five suggestions
   private commonIngredients: string[] = [
-    'só', 'cukor', 'liszt', 'olaj', 'rizs',
+    'só', 'cukor', 'csirkemell', 'liszt', 'olaj', 'rizs',
     'tojás', 'tej', 'vaj', 'bors', 'tészta',
     'hagyma', 'fokhagyma', 'paradicsom', 'burgonya', 'ecet',
     'sütőpor', 'élesztő', 'vajkrém', 'kakaópor', 'vaníliacukor'
@@ -212,15 +213,20 @@ export class PantryAddComponent {
     return findIngredientCategoryByName(raw);
   }
 
+  private previousCategory: IngredientCategory | null = null;
+
   constructor() {
-    const sub = this.pantryForm.get('name')?.valueChanges.subscribe((val: string) => {
-      const cat = findIngredientCategoryByName(val);
-      const unitCtrl = this.pantryForm.get('unit');
-      if (unitCtrl?.value !== cat.defaultUnit) {
-        unitCtrl?.setValue(cat.defaultUnit);
+    this.previousCategory = this.category;
+
+    // Reset quantity and unit when category changes
+    this.pantryForm.get('name')?.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
+      const currentCategory = this.category;
+      if (this.previousCategory && this.previousCategory.id !== currentCategory.id) {
+        this.pantryForm.get('quantity')?.reset();
+        this.pantryForm.get('unit')?.reset();
+        this.previousCategory = currentCategory;
       }
     });
-    this.destroyRef.onDestroy(() => sub?.unsubscribe());
   }
 
   async onSubmit(): Promise<void> {

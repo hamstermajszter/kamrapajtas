@@ -1,7 +1,6 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { MatChipsModule } from '@angular/material/chips';
-import { input } from '@angular/core';
-import { AmountUnitStrategy } from './amount-unit-strategy.types';
+import { DefaultAmountUnitComponent } from './default-amount-unit.component';
 import { findIngredientCategoryByName } from '../../models/ingredients.data';
 
 @Component({
@@ -20,22 +19,13 @@ import { findIngredientCategoryByName } from '../../models/ingredients.data';
     </div>
   `
 })
-export class EggsAmountUnitComponent implements AmountUnitStrategy {
-  form = input.required<any>();
-  units = input<Array<{ value: string; label: string }>>([]);
-
+export class EggsAmountUnitComponent extends DefaultAmountUnitComponent {
   eggChipValues: number[] = [1, 2, 4, 6, 10, 12];
 
   selectEggs(count: number): void {
-    const quantity = this.form().get('quantity');
-    const unit = this.form().get('unit');
     const nameCtrl = this.form().get('name');
-    quantity?.setValue(count);
     const cat = findIngredientCategoryByName(nameCtrl?.value as string | null | undefined);
-    if (unit && unit.value !== cat.defaultUnit) {
-      unit.setValue(cat.defaultUnit);
-    }
-    quantity?.markAsTouched();
-    unit?.markAsTouched();
+    this.setQuantity(count);
+    this.setUnit(cat.defaultUnit);
   }
 }

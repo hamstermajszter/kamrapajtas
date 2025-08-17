@@ -4,7 +4,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { input } from '@angular/core';
-import { AmountUnitStrategy } from './amount-unit-strategy.types';
 
 @Component({
   selector: 'app-default-amount-unit',
@@ -27,7 +26,7 @@ import { AmountUnitStrategy } from './amount-unit-strategy.types';
     </mat-form-field>
   `
 })
-export class DefaultAmountUnitComponent implements AmountUnitStrategy {
+export class DefaultAmountUnitComponent {
   form = input.required<any>();
   units = input<Array<{ value: string; label: string }>>([]);
 
@@ -37,5 +36,21 @@ export class DefaultAmountUnitComponent implements AmountUnitStrategy {
 
   get unitCtrl(): FormControl {
     return this.form().get('unit') as FormControl;
+  }
+
+  protected setQuantity(quantity: number | null): void {
+    const quantityCtrl = this.quantityCtrl;
+    if (quantityCtrl && quantityCtrl.value !== quantity) {
+      quantityCtrl.setValue(quantity);
+      quantityCtrl.markAsTouched();
+    }
+  }
+
+  protected setUnit(unit: string): void {
+    const unitCtrl = this.unitCtrl;
+    if (unitCtrl && unitCtrl.value !== unit) {
+      unitCtrl.setValue(unit);
+      unitCtrl.markAsTouched();
+    }
   }
 }
