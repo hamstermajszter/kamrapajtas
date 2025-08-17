@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, effect } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatStepper } from '@angular/material/stepper';
+import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -10,14 +11,12 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatStepperModule } from '@angular/material/stepper';
 import { PantryItem } from '../../models/pantry-item.interface';
 import { PantryService } from '../../services/pantry.service';
+import { IngredientService } from '../../services/ingredient.service';
 import { PantryListComponent } from '../pantry-list/pantry-list.component';
-import { findIngredientCategoryByName } from '../../models/ingredients.data';
 import { IngredientCategory } from '../../models/ingredient.interface';
-import { MatSliderModule } from '@angular/material/slider';
-import { FormsModule } from '@angular/forms';
-import { NgComponentOutlet } from '@angular/common';
-import { getStrategyComponentForCategory } from '../amount-strategies/strategy-map';
-import { AmountUnitStrategyInputs } from '../amount-strategies/amount-unit-strategy.types';
+
+import { AmountInputComponent } from './steps/amount-input.component';
+import { NameInputComponent } from './steps/name-input.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 
@@ -25,7 +24,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   selector: 'app-pantry-add',
   imports: [
     ReactiveFormsModule,
-    FormsModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -34,8 +32,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     MatSnackBarModule,
     MatStepperModule,
     MatChipsModule,
-    MatSliderModule,
-    NgComponentOutlet,
+    AmountInputComponent,
+    NameInputComponent,
     PantryListComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,40 +44,24 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       </mat-card-header>
 
       <mat-card-content>
-        <form [formGroup]="pantryForm" (ngSubmit)="onSubmit()">
+        <form [formGroup]="pantryForm" (ngSubmit)="onSubmit($event, stepper)">
           <mat-vertical-stepper [linear]="true" #stepper>
             <mat-step [stepControl]="pantryForm.get('name')!">
               <ng-template matStepLabel>{{ nameStepLabel }}</ng-template>
 
-              @if (suggestedIngredients().length > 0) {
-                <div class="chips-container">
-                  <div class="chips-label">Gyakori hozzávalók</div>
-                  <mat-chip-set>
-                    @for (chip of suggestedIngredients(); track chip) {
-                      <mat-chip (click)="setNameFromChip(chip); stepper.next()">{{ chip }}</mat-chip>
-                    }
-                  </mat-chip-set>
-                </div>
-              }
-
-              <mat-form-field appearance="outline">
-                <mat-label>Megnevezés</mat-label>
-                <input matInput formControlName="name" placeholder="pl. rizs">
-                @if (pantryForm.get('name')?.invalid && pantryForm.get('name')?.touched) {
-                  <mat-error>A megnevezés kötelező</mat-error>
-                }
-              </mat-form-field>
-
-              <div class="step-actions">
-                <span></span>
-                <button mat-raised-button color="primary" matStepperNext [disabled]="pantryForm.get('name')?.invalid">Tovább</button>
-              </div>
+              <app-name-input
+                [nameCtrl]="nameCtrl"
+                (next)="stepper.next()"
+              ></app-name-input>
             </mat-step>
 
             <mat-step [stepControl]="pantryForm.get('quantity')!">
               <ng-template matStepLabel>Mennyiség és mértékegység</ng-template>
 
-              <ng-container *ngComponentOutlet="strategyComponent; inputs: strategyInputsRecord"></ng-container>
+              <app-amount-input
+                [form]="pantryForm"
+                [commonAmounts]="category.commonAmounts">
+              </app-amount-input>
 
               <div class="form-actions">
                 <button mat-button matStepperPrevious type="button">Vissza</button>
@@ -90,7 +72,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                     Hozzáadás
                   }
                 </button>
-                <button mat-button type="button" (click)="resetForm()">Törlés</button>
               </div>
             </mat-step>
           </mat-vertical-stepper>
@@ -104,18 +85,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     mat-card {
       max-width: 500px;
       margin: 20px auto;
-    }
-
-    .chips-container {
-      margin-bottom: 8px;
-    }
-
-    .chips-label {
-      margin-bottom: 6px;
-      color: var(--mat-sys-on-surface-variant);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .5px;
     }
 
     form {
@@ -133,45 +102,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     .form-actions button {
       flex: 1;
     }
-
-    .step-actions {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 8px;
-    }
   `]
 })
 export class PantryAddComponent {
   private formBuilder = inject(FormBuilder);
   private pantryService = inject(PantryService);
+  private ingredientService = inject(IngredientService);
   private snackBar = inject(MatSnackBar);
-  private destroyRef = inject(DestroyRef);
   isLoading = false;
-
-  units = [
-    { value: 'g', label: 'gramm (g)' },
-    { value: 'kg', label: 'kilogramm (kg)' },
-    { value: 'db', label: 'darab (db)' },
-    { value: 'l', label: 'liter (l)' },
-    { value: 'ml', label: 'milliliter (ml)' },
-    { value: 'tk', label: 'teáskanál (tk)' },
-    { value: 'ek', label: 'evőkanál (ek)' },
-    { value: 'csomag', label: 'csomag' },
-    { value: 'doboz', label: 'doboz' },
-    { value: 'üveg', label: 'üveg' }
-  ];
-
-  get strategyComponent() {
-    return getStrategyComponentForCategory(this.category);
-  }
-
-  get strategyInputs(): AmountUnitStrategyInputs {
-    return { form: this.pantryForm, units: this.units };
-  }
-
-  get strategyInputsRecord(): Record<string, unknown> {
-    return this.strategyInputs as unknown as Record<string, unknown>;
-  }
 
   pantryForm: FormGroup = this.formBuilder.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
@@ -179,57 +117,36 @@ export class PantryAddComponent {
     unit: ['', Validators.required]
   });
 
-  // Ranked by commonness in the app; used to offer top five suggestions
-  private commonIngredients: string[] = [
-    'só', 'cukor', 'csirkemell', 'liszt', 'olaj', 'rizs',
-    'tojás', 'tej', 'vaj', 'bors', 'tészta',
-    'hagyma', 'fokhagyma', 'paradicsom', 'burgonya', 'ecet',
-    'sütőpor', 'élesztő', 'vajkrém', 'kakaópor', 'vaníliacukor'
-  ];
-
-  suggestedIngredients = computed(() =>
-    this.commonIngredients
-      .filter(name => !this.pantryNamesLowercase().has(name.toLowerCase()))
-      .slice(0, 5)
-  );
-  private pantryNamesLowercase = computed<Set<string>>(() => new Set(
-    this.pantryService.pantryItemsSig().map(i => (i.name || '').trim().toLowerCase()).filter(Boolean)
-  ));
+  get nameCtrl(): FormControl {
+    return this.pantryForm.get('name') as FormControl;
+  }
 
   get nameStepLabel(): string {
     const raw = this.pantryForm.get('name')?.value as string | null | undefined;
     const name = (raw || '').trim();
     return `Megnevezés${name ? ': ' + name : ''}`;
   }
-  setNameFromChip(name: string): void {
-    const trimmed = (name || '').trim();
-    this.pantryForm.get('name')?.setValue(trimmed);
-    this.pantryForm.get('name')?.markAsTouched();
-    this.pantryForm.get('name')?.updateValueAndValidity();
-  }
 
   get category(): IngredientCategory {
     const raw = this.pantryForm.get('name')?.value as string | null | undefined;
-    return findIngredientCategoryByName(raw);
+    return this.ingredientService.getCategoryByName(raw);
   }
 
-  private previousCategory: IngredientCategory | null = null;
-
   constructor() {
-    this.previousCategory = this.category;
-
-    // Reset quantity and unit when category changes
+    // Reset quantity and unit when name changes
     this.pantryForm.get('name')?.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
-      const currentCategory = this.category;
-      if (this.previousCategory && this.previousCategory.id !== currentCategory.id) {
-        this.pantryForm.get('quantity')?.reset();
-        this.pantryForm.get('unit')?.reset();
-        this.previousCategory = currentCategory;
-      }
+      this.pantryForm.get('quantity')?.reset();
+      this.pantryForm.get('unit')?.reset();
     });
   }
 
-  async onSubmit(): Promise<void> {
+  async onSubmit(event: Event, stepper: MatStepper): Promise<void> {
+    // Only allow submit if we're on the last step (step index 1)
+    if (stepper.selectedIndex !== 1) {
+      event.preventDefault();
+      return;
+    }
+
     if (this.pantryForm.valid) {
       this.isLoading = true;
 
@@ -249,6 +166,7 @@ export class PantryAddComponent {
         });
 
         this.resetForm();
+        stepper.reset();
       } catch (error) {
         console.error('Error saving pantry item:', error);
         this.snackBar.open('Hiba történt a mentés során. Kérjük próbálja újra!', 'Bezár', {
@@ -263,8 +181,11 @@ export class PantryAddComponent {
 
   resetForm(): void {
     this.pantryForm.reset();
+    this.pantryForm.markAsPristine();
+    this.pantryForm.markAsUntouched();
     Object.keys(this.pantryForm.controls).forEach(key => {
       this.pantryForm.get(key)?.setErrors(null);
     });
   }
 }
+

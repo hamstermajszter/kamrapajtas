@@ -1,24 +1,207 @@
 import { Ingredient, IngredientCategory, IngredientCategoryId } from './ingredient.interface';
 
 export const CATEGORIES: Record<IngredientCategoryId, IngredientCategory> = {
-  meat: { id: 'meat', label: 'Húsok', defaultUnit: 'g' },
-  eggs: { id: 'eggs', label: 'Tojás', defaultUnit: 'db' },
-  dairy: { id: 'dairy', label: 'Tejtermékek', defaultUnit: 'g' },
-  produce: { id: 'produce', label: 'Zöldség/gyümölcs', defaultUnit: 'g' },
-  grains: { id: 'grains', label: 'Gabonák', defaultUnit: 'g' },
-  spices: { id: 'spices', label: 'Fűszerek', defaultUnit: 'tk' },
-  baking: { id: 'baking', label: 'Sütés', defaultUnit: 'g' },
-  sweets: { id: 'sweets', label: 'Édességek', defaultUnit: 'g' },
-  bakery: { id: 'bakery', label: 'Pékáru', defaultUnit: 'db' },
-  condiments: { id: 'condiments', label: 'Szószok', defaultUnit: 'ml' },
-  oils: { id: 'oils', label: 'Olajok', defaultUnit: 'ml' },
-  seafood: { id: 'seafood', label: 'Tenger gyümölcsei', defaultUnit: 'g' },
-  canned: { id: 'canned', label: 'Konzerv', defaultUnit: 'doboz' },
-  legumes: { id: 'legumes', label: 'Hüvelyesek', defaultUnit: 'g' },
-  nutsSeeds: { id: 'nutsSeeds', label: 'Magvak', defaultUnit: 'g' },
-  beverages: { id: 'beverages', label: 'Italok', defaultUnit: 'ml' },
-  frozen: { id: 'frozen', label: 'Fagyasztott', defaultUnit: 'g' },
-  other: { id: 'other', label: 'Egyéb', defaultUnit: 'db' },
+  meat: {
+    id: 'meat',
+    label: 'Húsok',
+    defaultUnit: 'g',
+    commonAmounts: [
+      { quantity: 500, unit: 'g' },
+      { quantity: 650, unit: 'g' },
+      { quantity: 1000, unit: 'g', label: '1kg' },
+      { quantity: 1500, unit: 'g', label: '1,5kg' }
+    ]
+  },
+  eggs: {
+    id: 'eggs',
+    label: 'Tojás',
+    defaultUnit: 'db',
+    commonAmounts: [
+      { quantity: 1, unit: 'db' },
+      { quantity: 2, unit: 'db' },
+      { quantity: 4, unit: 'db' },
+      { quantity: 6, unit: 'db' },
+      { quantity: 10, unit: 'db' },
+      { quantity: 12, unit: 'db', label: '1 tucat' }
+    ]
+  },
+  dairy: {
+    id: 'dairy',
+    label: 'Tejtermékek',
+    defaultUnit: 'g',
+    commonAmounts: [
+      { quantity: 200, unit: 'g' },
+      { quantity: 250, unit: 'ml' },
+      { quantity: 500, unit: 'ml' },
+      { quantity: 1000, unit: 'ml', label: '1 liter' }
+    ]
+  },
+  produce: {
+    id: 'produce',
+    label: 'Zöldség/gyümölcs',
+    defaultUnit: 'g',
+    commonAmounts: [
+      { quantity: 1, unit: 'db' },
+      { quantity: 2, unit: 'db' },
+      { quantity: 250, unit: 'g' },
+      { quantity: 500, unit: 'g' },
+      { quantity: 1000, unit: 'g', label: '1kg' }
+    ]
+  },
+    grains: {
+    id: 'grains',
+    label: 'Gabonák',
+    defaultUnit: 'g',
+    commonAmounts: [
+      { quantity: 250, unit: 'g' },
+      { quantity: 500, unit: 'g' },
+      { quantity: 1000, unit: 'g', label: '1kg' },
+      { quantity: 1, unit: 'csomag' }
+    ]
+  },
+    spices: {
+    id: 'spices',
+    label: 'Fűszerek',
+    defaultUnit: 'tk',
+    commonAmounts: [
+      { quantity: 1, unit: 'tk' },
+      { quantity: 1, unit: 'ek' },
+      { quantity: 50, unit: 'g' },
+      { quantity: 100, unit: 'g' }
+    ]
+  },
+    baking: {
+    id: 'baking',
+    label: 'Sütés',
+    defaultUnit: 'g',
+    commonAmounts: [
+      { quantity: 250, unit: 'g' },
+      { quantity: 500, unit: 'g' },
+      { quantity: 1000, unit: 'g', label: '1kg' },
+      { quantity: 1, unit: 'csomag' }
+    ]
+  },
+    sweets: {
+    id: 'sweets',
+    label: 'Édességek',
+    defaultUnit: 'g',
+    commonAmounts: [
+      { quantity: 100, unit: 'g' },
+      { quantity: 200, unit: 'g' },
+      { quantity: 1, unit: 'db' },
+      { quantity: 1, unit: 'csomag' }
+    ]
+  },
+    bakery: {
+    id: 'bakery',
+    label: 'Pékáru',
+    defaultUnit: 'db',
+    commonAmounts: [
+      { quantity: 1, unit: 'db' },
+      { quantity: 4, unit: 'db' },
+      { quantity: 6, unit: 'db' },
+      { quantity: 1, unit: 'csomag' }
+    ]
+  },
+  condiments: {
+    id: 'condiments',
+    label: 'Szószok',
+    defaultUnit: 'ml',
+    commonAmounts: [
+      { quantity: 1, unit: 'ek' },
+      { quantity: 100, unit: 'ml' },
+      { quantity: 250, unit: 'ml' },
+      { quantity: 500, unit: 'ml' },
+      { quantity: 1, unit: 'üveg' }
+    ]
+  },
+  oils: {
+    id: 'oils',
+    label: 'Olajok',
+    defaultUnit: 'ml',
+    commonAmounts: [
+      { quantity: 1, unit: 'ek' },
+      { quantity: 250, unit: 'ml' },
+      { quantity: 500, unit: 'ml' },
+      { quantity: 1000, unit: 'ml', label: '1 liter' }
+    ]
+  },
+  seafood: {
+    id: 'seafood',
+    label: 'Tenger gyümölcsei',
+    defaultUnit: 'g',
+    commonAmounts: [
+      { quantity: 250, unit: 'g' },
+      { quantity: 500, unit: 'g' },
+      { quantity: 1000, unit: 'g', label: '1kg' },
+      { quantity: 1, unit: 'doboz' }
+    ]
+  },
+  canned: {
+    id: 'canned',
+    label: 'Konzerv',
+    defaultUnit: 'doboz',
+    commonAmounts: [
+      { quantity: 1, unit: 'doboz' },
+      { quantity: 2, unit: 'doboz' },
+      { quantity: 400, unit: 'g' },
+      { quantity: 800, unit: 'g' }
+    ]
+  },
+  legumes: {
+    id: 'legumes',
+    label: 'Hüvelyesek',
+    defaultUnit: 'g',
+    commonAmounts: [
+      { quantity: 250, unit: 'g' },
+      { quantity: 500, unit: 'g' },
+      { quantity: 1000, unit: 'g', label: '1kg' },
+      { quantity: 1, unit: 'doboz' }
+    ]
+  },
+  nutsSeeds: {
+    id: 'nutsSeeds',
+    label: 'Magvak',
+    defaultUnit: 'g',
+    commonAmounts: [
+      { quantity: 100, unit: 'g' },
+      { quantity: 200, unit: 'g' },
+      { quantity: 500, unit: 'g' },
+      { quantity: 1, unit: 'csomag' }
+    ]
+  },
+  beverages: {
+    id: 'beverages',
+    label: 'Italok',
+    defaultUnit: 'ml',
+    commonAmounts: [
+      { quantity: 250, unit: 'ml' },
+      { quantity: 500, unit: 'ml' },
+      { quantity: 1000, unit: 'ml', label: '1 liter' },
+      { quantity: 1, unit: 'üveg' }
+    ]
+  },
+  frozen: {
+    id: 'frozen',
+    label: 'Fagyasztott',
+    defaultUnit: 'g',
+    commonAmounts: [
+      { quantity: 300, unit: 'g' },
+      { quantity: 500, unit: 'g' },
+      { quantity: 1000, unit: 'g', label: '1kg' },
+      { quantity: 1, unit: 'csomag' }
+    ]
+  },
+  other: {
+    id: 'other',
+    label: 'Egyéb',
+    defaultUnit: 'db',
+    commonAmounts: [
+      { quantity: 1, unit: 'db' },
+      { quantity: 2, unit: 'db' },
+      { quantity: 1, unit: 'csomag' }
+    ]
+  },
 };
 
 export const INGREDIENTS: Ingredient[] = [

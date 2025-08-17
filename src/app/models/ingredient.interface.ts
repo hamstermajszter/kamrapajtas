@@ -18,10 +18,17 @@ export type IngredientCategoryId =
   | 'frozen'
   | 'other';
 
+export interface CommonAmount {
+  quantity: number;
+  unit: string;
+  label?: string;
+}
+
 export interface IngredientCategory {
   id: IngredientCategoryId;
   label: string;
   defaultUnit: string;
+  commonAmounts: CommonAmount[];
 }
 
 export interface Ingredient {
