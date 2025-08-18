@@ -9,8 +9,8 @@ import { IngredientCategory, Ingredient, IngredientCategoryId } from '../models/
 export class IngredientService {
   private pantryService = inject(PantryService);
 
-  // Selected categories for filtering ingredients
-  private selectedCategoriesSig = signal<Set<IngredientCategoryId>>(new Set());
+  // Selected category for filtering ingredients (single selection)
+  private selectedCategorySig = signal<IngredientCategoryId | null>(null);
 
   // Available units for ingredients
   readonly units = [
@@ -36,19 +36,19 @@ export class IngredientService {
 
   // Get suggested ingredients that are not already in pantry
   suggestedIngredients = computed(() => {
-    const selectedCategories = this.selectedCategoriesSig();
+    const selectedCategory = this.selectedCategorySig();
     const pantryNames = this.pantryNamesLowercase();
     
-    // If no categories are selected, show common ingredients from any category
-    if (selectedCategories.size === 0) {
+    // If no category is selected, show common ingredients from any category
+    if (!selectedCategory) {
       return this.commonIngredients
         .filter(name => !pantryNames.has(name.toLowerCase()))
         .slice(0, 5);
     }
     
-    // Filter ingredients by selected categories
+    // Filter ingredients by selected category
     const filteredIngredients = INGREDIENTS
-      .filter(ingredient => selectedCategories.has(ingredient.category.id))
+      .filter(ingredient => ingredient.category.id === selectedCategory)
       .filter(ingredient => !pantryNames.has(ingredient.name.toLowerCase()))
       .map(ingredient => ingredient.name);
     
@@ -96,37 +96,24 @@ export class IngredientService {
   }
 
   /**
-   * Get selected categories as readonly signal
+   * Get selected category as readonly signal
    */
-  getSelectedCategories() {
-    return this.selectedCategoriesSig.asReadonly();
+  getSelectedCategory() {
+    return this.selectedCategorySig.asReadonly();
   }
 
   /**
-   * Toggle category selection
+   * Set selected category (single selection)
    */
-  toggleCategory(categoryId: IngredientCategoryId): void {
-    const current = new Set(this.selectedCategoriesSig());
-    if (current.has(categoryId)) {
-      current.delete(categoryId);
-    } else {
-      current.add(categoryId);
-    }
-    this.selectedCategoriesSig.set(current);
+  setSelectedCategory(categoryId: IngredientCategoryId | null): void {
+    this.selectedCategorySig.set(categoryId);
   }
 
   /**
-   * Clear all selected categories
+   * Clear selected category
    */
-  clearCategories(): void {
-    this.selectedCategoriesSig.set(new Set());
-  }
-
-  /**
-   * Check if a category is selected
-   */
-  isCategorySelected(categoryId: IngredientCategoryId): boolean {
-    return this.selectedCategoriesSig().has(categoryId);
+  clearCategory(): void {
+    this.selectedCategorySig.set(null);
   }
 
   /**

@@ -19,8 +19,8 @@ import { CategoryChipsComponent } from '../../category-chips/category-chips.comp
     @if (ingredientService.suggestedIngredients().length > 0) {
       <div class="chips-container">
         <div class="chips-label">
-          @if (ingredientService.getSelectedCategories()().size > 0) {
-            Ajánlott hozzávalók a kiválasztott kategóriákból
+          @if (ingredientService.getSelectedCategory()()) {
+            Ajánlott hozzávalók a kiválasztott kategóriából
           } @else {
             Gyakori hozzávalók
           }
