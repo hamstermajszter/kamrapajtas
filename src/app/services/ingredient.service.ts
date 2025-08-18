@@ -23,12 +23,35 @@ export class IngredientService {
     { value: 'üveg', label: 'üveg' }
   ];
 
-  // Ranked by commonness in the app; used to offer top suggestions
+  // Ranked by volatility and frequency of replenishment; used to offer top suggestions
   private readonly commonIngredients: string[] = [
-    'só', 'cukor', 'csirkemell', 'liszt', 'olaj', 'rizs',
-    'tojás', 'tej', 'vaj', 'bors', 'tészta',
-    'hagyma', 'fokhagyma', 'paradicsom', 'burgonya', 'ecet',
-    'sütőpor', 'élesztő', 'vajkrém', 'kakaópor', 'vaníliacukor'
+    // Most volatile dairy and eggs - replenished multiple times per week
+    'tej', 'tojás', 'vaj', 'sajt', 'tejföl', 'joghurt', 'tejszín',
+
+    // Fresh vegetables - most frequently bought
+    'hagyma', 'fokhagyma', 'paradicsom', 'paprika', 'burgonya', 'sárgarépa',
+    'uborka', 'saláta', 'brokkoli', 'cukkini', 'spenót', 'gomba',
+
+    // Fresh fruits - frequently replenished
+    'banán', 'alma', 'citrom', 'narancs', 'avokádó',
+
+    // Fresh meats - bought regularly
+    'csirkemell', 'csirkecomb', 'darált marhahús', 'darált sertéshús',
+
+    // Fresh bakery items - daily/frequent purchases
+    'kenyér', 'zsemle', 'kifli',
+
+    // Essential cooking ingredients - frequently used
+    'olívaolaj', 'napraforgóolaj', 'bors', 'pirospaprika',
+
+    // Regular grains and pasta
+    'rizs', 'tészta', 'spagetti',
+
+    // Fresh herbs - frequently bought
+    'petrezselyem', 'snidling', 'bazsalikom',
+
+    // Essential condiments - regularly consumed
+    'ketchup', 'majonéz', 'mustár', 'balzsamecet'
   ];
 
   // Get suggested ingredients that are not already in pantry
