@@ -1,13 +1,16 @@
-import { Injectable, computed, inject } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { PantryService } from './pantry.service';
 import { CATEGORIES, INGREDIENTS } from '../models/ingredients.data';
-import { IngredientCategory, Ingredient } from '../models/ingredient.interface';
+import { IngredientCategory, Ingredient, IngredientCategoryId } from '../models/ingredient.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class IngredientService {
   private pantryService = inject(PantryService);
+
+  // Selected categories for filtering ingredients
+  private selectedCategoriesSig = signal<Set<IngredientCategoryId>>(new Set());
 
   // Available units for ingredients
   readonly units = [
@@ -32,11 +35,25 @@ export class IngredientService {
   ];
 
   // Get suggested ingredients that are not already in pantry
-  suggestedIngredients = computed(() =>
-    this.commonIngredients
-      .filter(name => !this.pantryNamesLowercase().has(name.toLowerCase()))
-      .slice(0, 5)
-  );
+  suggestedIngredients = computed(() => {
+    const selectedCategories = this.selectedCategoriesSig();
+    const pantryNames = this.pantryNamesLowercase();
+    
+    // If no categories are selected, show common ingredients from any category
+    if (selectedCategories.size === 0) {
+      return this.commonIngredients
+        .filter(name => !pantryNames.has(name.toLowerCase()))
+        .slice(0, 5);
+    }
+    
+    // Filter ingredients by selected categories
+    const filteredIngredients = INGREDIENTS
+      .filter(ingredient => selectedCategories.has(ingredient.category.id))
+      .filter(ingredient => !pantryNames.has(ingredient.name.toLowerCase()))
+      .map(ingredient => ingredient.name);
+    
+    return filteredIngredients.slice(0, 5);
+  });
 
   private pantryNamesLowercase = computed<Set<string>>(() => new Set(
     this.pantryService.pantryItemsSig().map(i => (i.name || '').trim().toLowerCase()).filter(Boolean)
@@ -76,5 +93,46 @@ export class IngredientService {
     return INGREDIENTS.filter(ingredient =>
       ingredient.name.toLowerCase().includes(normalizedQuery)
     );
+  }
+
+  /**
+   * Get selected categories as readonly signal
+   */
+  getSelectedCategories() {
+    return this.selectedCategoriesSig.asReadonly();
+  }
+
+  /**
+   * Toggle category selection
+   */
+  toggleCategory(categoryId: IngredientCategoryId): void {
+    const current = new Set(this.selectedCategoriesSig());
+    if (current.has(categoryId)) {
+      current.delete(categoryId);
+    } else {
+      current.add(categoryId);
+    }
+    this.selectedCategoriesSig.set(current);
+  }
+
+  /**
+   * Clear all selected categories
+   */
+  clearCategories(): void {
+    this.selectedCategoriesSig.set(new Set());
+  }
+
+  /**
+   * Check if a category is selected
+   */
+  isCategorySelected(categoryId: IngredientCategoryId): boolean {
+    return this.selectedCategoriesSig().has(categoryId);
+  }
+
+  /**
+   * Get all categories as array for easier template usage
+   */
+  getCategoriesArray(): IngredientCategory[] {
+    return Object.values(CATEGORIES);
   }
 }

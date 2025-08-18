@@ -6,19 +6,28 @@ import { MatButtonModule } from '@angular/material/button';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { input, output } from '@angular/core';
 import { IngredientService } from '../../../services/ingredient.service';
+import { CategoryChipsComponent } from '../../category-chips/category-chips.component';
 
 @Component({
   selector: 'app-name-input',
   standalone: true,
-  imports: [MatFormFieldModule, MatInputModule, MatChipsModule, MatButtonModule, ReactiveFormsModule],
+  imports: [MatFormFieldModule, MatInputModule, MatChipsModule, MatButtonModule, ReactiveFormsModule, CategoryChipsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <app-category-chips></app-category-chips>
+
     @if (ingredientService.suggestedIngredients().length > 0) {
       <div class="chips-container">
-        <div class="chips-label">Gyakori hozzávalók</div>
+        <div class="chips-label">
+          @if (ingredientService.getSelectedCategories()().size > 0) {
+            Ajánlott hozzávalók a kiválasztott kategóriákból
+          } @else {
+            Gyakori hozzávalók
+          }
+        </div>
         <mat-chip-set>
           @for (chip of ingredientService.suggestedIngredients(); track chip) {
-            <mat-chip (click)="selectSuggestion(chip)">{{ chip }}</mat-chip>
+            <mat-chip (click)="selectSuggestion(chip)" class="suggestion-chip">{{ chip }}</mat-chip>
           }
         </mat-chip-set>
       </div>
@@ -48,6 +57,20 @@ import { IngredientService } from '../../../services/ingredient.service';
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: .5px;
+      font-weight: 500;
+    }
+
+    .suggestion-chip {
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background-color: var(--mat-sys-secondary-container);
+      color: var(--mat-sys-on-secondary-container);
+      
+      &:hover {
+        background-color: var(--mat-sys-secondary-container);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
     }
 
     .step-actions {
