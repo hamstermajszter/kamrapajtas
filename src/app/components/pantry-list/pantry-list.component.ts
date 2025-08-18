@@ -1,4 +1,5 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,18 +7,19 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { PantryService } from '../../services/pantry.service';
 import { PantryItem } from '../../models/pantry-item.interface';
-import { CommonModule } from '@angular/common';
+import { QuantityDisplayPipe } from '../../pipes/quantity-display.pipe';
 
 @Component({
   selector: 'app-pantry-list',
   standalone: true,
   imports: [
+    CommonModule,
     MatCardModule,
     MatTableModule,
     MatIconModule,
     MatButtonModule,
     MatSnackBarModule,
-    CommonModule
+    QuantityDisplayPipe
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -43,15 +45,7 @@ import { CommonModule } from '@angular/common';
                 <span class="label-desktop">Mennyiség</span>
                 <abbr class="label-mobile" title="Mennyiség">Menny.</abbr>
               </th>
-              <td mat-cell *matCellDef="let item">{{ item.quantity }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="unit">
-              <th mat-header-cell *matHeaderCellDef>
-                <span class="label-desktop">Mértékegység</span>
-                <abbr class="label-mobile" title="Mértékegység">ME</abbr>
-              </th>
-              <td mat-cell *matCellDef="let item">{{ item.unit }}</td>
+              <td mat-cell *matCellDef="let item">{{ item.quantity | quantityDisplay: item.unit }}</td>
             </ng-container>
 
             <ng-container matColumnDef="actions">
@@ -105,7 +99,7 @@ export class PantryListComponent {
 
   // Switch to signal-based state for zoneless change detection
   readonly pantryItemsSig = this.pantryService.pantryItemsSig;
-  displayedColumns: string[] = ['name', 'quantity', 'unit', 'actions'];
+  displayedColumns: string[] = ['name', 'quantity', 'actions'];
 
   async onDelete(item: PantryItem): Promise<void> {
     try {
