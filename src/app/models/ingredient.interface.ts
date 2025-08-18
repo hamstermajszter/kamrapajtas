@@ -33,5 +33,5 @@ export interface IngredientCategory {
 
 export interface Ingredient {
   name: string;
-  category: IngredientCategoryId;
+  category: IngredientCategory;
 }
