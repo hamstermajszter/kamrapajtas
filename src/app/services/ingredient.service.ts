@@ -1,6 +1,6 @@
 import { Injectable, computed, inject } from '@angular/core';
 import { PantryService } from './pantry.service';
-import { findIngredientCategoryByName, CATEGORIES, INGREDIENTS } from '../models/ingredients.data';
+import { CATEGORIES, INGREDIENTS } from '../models/ingredients.data';
 import { IngredientCategory, Ingredient } from '../models/ingredient.interface';
 
 @Injectable({
@@ -46,7 +46,10 @@ export class IngredientService {
    * Get ingredient category by name
    */
   getCategoryByName(name: string | null | undefined): IngredientCategory {
-    return findIngredientCategoryByName(name);
+    const normalized = (name || '').trim().toLowerCase();
+    if (!normalized) return CATEGORIES.other;
+    const found = INGREDIENTS.find(i => i.name.toLowerCase() === normalized);
+    return found ? found.category : CATEGORIES.other;
   }
 
   /**

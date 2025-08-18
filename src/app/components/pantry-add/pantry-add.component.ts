@@ -44,7 +44,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       </mat-card-header>
 
       <mat-card-content>
-        <form [formGroup]="pantryForm" (ngSubmit)="onSubmit($event, stepper)">
+        <form [formGroup]="pantryForm" (ngSubmit)="onSubmit(stepper)">
           <mat-vertical-stepper [linear]="true" #stepper>
             <mat-step [stepControl]="pantryForm.get('name')!">
               <ng-template matStepLabel>{{ nameStepLabel }}</ng-template>
@@ -140,13 +140,7 @@ export class PantryAddComponent {
     });
   }
 
-  async onSubmit(event: Event, stepper: MatStepper): Promise<void> {
-    // Only allow submit if we're on the last step (step index 1)
-    if (stepper.selectedIndex !== 1) {
-      event.preventDefault();
-      return;
-    }
-
+  async onSubmit(stepper: MatStepper): Promise<void> {
     if (this.pantryForm.valid) {
       this.isLoading = true;
 

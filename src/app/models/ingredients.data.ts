@@ -306,10 +306,3 @@ export const INGREDIENTS: Ingredient[] = [
   { name: 'konzerv bab', category: CATEGORIES.canned },
   { name: 'csicseriborsó konzerv', category: CATEGORIES.canned }
 ];
-
-export function findIngredientCategoryByName(name: string | null | undefined): IngredientCategory {
-  const normalized = (name || '').trim().toLowerCase();
-  if (!normalized) return CATEGORIES.other;
-  const found = INGREDIENTS.find(i => i.name.toLowerCase() === normalized);
-  return found ? found.category : CATEGORIES.other;
-}
