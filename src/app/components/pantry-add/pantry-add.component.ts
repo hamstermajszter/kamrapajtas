@@ -38,53 +38,78 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>Új hozzávaló felvitele</mat-card-title>
-      </mat-card-header>
+    <div class="pantry-container">
+      <mat-card class="add-form-card">
+        <mat-card-header>
+          <mat-card-title>Új hozzávaló felvitele</mat-card-title>
+        </mat-card-header>
 
-      <mat-card-content>
-        <form [formGroup]="pantryForm" (ngSubmit)="onSubmit(stepper)">
-          <mat-vertical-stepper [linear]="true" #stepper>
-            <mat-step [stepControl]="pantryForm.get('name')!">
-              <ng-template matStepLabel>{{ nameStepLabel }}</ng-template>
+        <mat-card-content>
+          <form [formGroup]="pantryForm" (ngSubmit)="onSubmit(stepper)">
+            <mat-vertical-stepper [linear]="true" #stepper>
+              <mat-step [stepControl]="pantryForm.get('name')!">
+                <ng-template matStepLabel>{{ nameStepLabel }}</ng-template>
 
-              <app-name-input
-                [nameCtrl]="nameCtrl"
-                (next)="stepper.next()"
-              ></app-name-input>
-            </mat-step>
+                <app-name-input
+                  [nameCtrl]="nameCtrl"
+                  (next)="stepper.next()"
+                ></app-name-input>
+              </mat-step>
 
-            <mat-step [stepControl]="pantryForm.get('quantity')!">
-              <ng-template matStepLabel>Mennyiség és mértékegység</ng-template>
+              <mat-step [stepControl]="pantryForm.get('quantity')!">
+                <ng-template matStepLabel>Mennyiség és mértékegység</ng-template>
 
-              <app-amount-input
-                [form]="pantryForm"
-                [commonAmounts]="category.commonAmounts">
-              </app-amount-input>
+                <app-amount-input
+                  [form]="pantryForm"
+                  [commonAmounts]="category.commonAmounts">
+                </app-amount-input>
 
-              <div class="form-actions">
-                <button mat-button matStepperPrevious type="button">Vissza</button>
-                <button mat-raised-button color="primary" type="submit" [disabled]="pantryForm.invalid || isLoading">
-                  @if (isLoading) {
-                    Mentés...
-                  } @else {
-                    Hozzáadás
-                  }
-                </button>
-              </div>
-            </mat-step>
-          </mat-vertical-stepper>
-        </form>
-      </mat-card-content>
-    </mat-card>
+                <div class="form-actions">
+                  <button mat-button matStepperPrevious type="button">Vissza</button>
+                  <button mat-raised-button color="primary" type="submit" [disabled]="pantryForm.invalid || isLoading">
+                    @if (isLoading) {
+                      Mentés...
+                    } @else {
+                      Hozzáadás
+                    }
+                  </button>
+                </div>
+              </mat-step>
+            </mat-vertical-stepper>
+          </form>
+        </mat-card-content>
+      </mat-card>
 
-    <app-pantry-list></app-pantry-list>
+      <div class="pantry-list-container">
+        <app-pantry-list></app-pantry-list>
+      </div>
+    </div>
   `,
   styles: [`
-    mat-card {
+    .pantry-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      align-items: flex-start;
+    }
+
+    .add-form-card {
+      flex: 1 1 400px;
+      min-width: 320px;
       max-width: 500px;
-      margin: 20px auto;
+      margin: 0;
+      position: sticky;
+      top: 20px;
+      align-self: flex-start;
+      height: fit-content;
+    }
+
+    .pantry-list-container {
+      flex: 2 1 500px;
+      min-width: 300px;
     }
 
     form {
