@@ -67,7 +67,7 @@ import { QuantityDisplayPipe } from '../../pipes/quantity-display.pipe';
   styles: [`
     .pantry-list-card {
       max-width: 900px;
-      margin: 12px auto 24px;
+      margin: 0;
     }
 
     .full-width {
