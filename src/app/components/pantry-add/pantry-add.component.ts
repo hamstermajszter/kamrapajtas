@@ -101,6 +101,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       min-width: 320px;
       max-width: 500px;
       margin: 0;
+      position: sticky;
+      top: 20px;
+      align-self: flex-start;
+      height: fit-content;
     }
 
     .pantry-list-container {
