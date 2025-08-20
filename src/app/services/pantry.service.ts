@@ -12,11 +12,14 @@ import {
   DocumentData,
   query,
   orderBy,
-  where
+  where,
+  getDoc,
+  setDoc,
+  onSnapshot
 } from '@angular/fire/firestore';
 import { Observable, of, Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { PantryItem } from '../models/pantry-item.interface';
+import { PantryItem, UserPantry } from '../models/pantry-item.interface';
 import { Auth, authState } from '@angular/fire/auth';
 
 @Injectable({
@@ -25,14 +28,14 @@ import { Auth, authState } from '@angular/fire/auth';
 export class PantryService implements OnDestroy {
   private firestore = inject(Firestore);
   private auth = inject(Auth);
-  private pantryCollection: CollectionReference<DocumentData>;
+  private userPantryCollection: CollectionReference<DocumentData>;
   private subscription: Subscription | null = null;
 
   // Signal for components to consume
   readonly pantryItemsSig = signal<PantryItem[]>([]);
 
   constructor() {
-    this.pantryCollection = collection(this.firestore, 'pantryItems');
+    this.userPantryCollection = collection(this.firestore, 'userPantries');
     // Subscribe once and feed the signal; zoneless-friendly
     this.subscription = authState(this.auth)
       .pipe(
@@ -40,12 +43,26 @@ export class PantryService implements OnDestroy {
           if (!user) {
             return of([] as PantryItem[]);
           }
-          const q = query(
-            this.pantryCollection,
-            where('userId', '==', user.uid),
-            orderBy('createdAt', 'desc')
-          );
-          return collectionData(q, { idField: 'id' }) as Observable<PantryItem[]>;
+          const userDocRef = doc(this.userPantryCollection, user.uid);
+          return new Observable<PantryItem[]>(observer => {
+            const unsubscribe = onSnapshot(userDocRef, (docSnapshot) => {
+              if (docSnapshot.exists()) {
+                const userData = docSnapshot.data() as UserPantry;
+                // Sort items by createdAt descending
+                const sortedItems = [...userData.items].sort((a, b) => 
+                  b.createdAt.toMillis() - a.createdAt.toMillis()
+                );
+                observer.next(sortedItems);
+              } else {
+                observer.next([]);
+              }
+            }, (error) => {
+              console.error('Error listening to user pantry:', error);
+              observer.next([]);
+            });
+            
+            return () => unsubscribe();
+          });
         })
       )
       .subscribe(items => this.pantryItemsSig.set(items));
@@ -57,11 +74,30 @@ export class PantryService implements OnDestroy {
       throw new Error('Not authenticated');
     }
     try {
-      await addDoc(this.pantryCollection, {
+      const userDocRef = doc(this.userPantryCollection, user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      const newItem: PantryItem = {
         ...item,
-        userId: user.uid,
-        createdAt: serverTimestamp()
-      });
+        id: crypto.randomUUID(),
+        createdAt: serverTimestamp() as any
+      };
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data() as UserPantry;
+        const updatedItems = [...userData.items, newItem];
+        await updateDoc(userDocRef, {
+          items: updatedItems,
+          updatedAt: serverTimestamp()
+        });
+      } else {
+        const newUserPantry: UserPantry = {
+          userId: user.uid,
+          items: [newItem],
+          updatedAt: serverTimestamp() as any
+        };
+        await setDoc(userDocRef, newUserPantry);
+      }
     } catch (error) {
       console.error('Error adding pantry item:', error);
       throw new Error('Failed to add pantry item');
@@ -73,9 +109,22 @@ export class PantryService implements OnDestroy {
   }
 
   async deletePantryItem(id: string): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
     try {
-      const docRef = doc(this.firestore, 'pantryItems', id);
-      await deleteDoc(docRef);
+      const userDocRef = doc(this.userPantryCollection, user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data() as UserPantry;
+        const updatedItems = userData.items.filter(item => item.id !== id);
+        await updateDoc(userDocRef, {
+          items: updatedItems,
+          updatedAt: serverTimestamp()
+        });
+      }
     } catch (error) {
       console.error('Error deleting pantry item:', error);
       throw new Error('Failed to delete pantry item');
@@ -83,9 +132,24 @@ export class PantryService implements OnDestroy {
   }
 
   async updatePantryItem(id: string, updates: Partial<Omit<PantryItem, 'id' | 'createdAt'>>): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
     try {
-      const docRef = doc(this.firestore, 'pantryItems', id);
-      await updateDoc(docRef, updates);
+      const userDocRef = doc(this.userPantryCollection, user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data() as UserPantry;
+        const updatedItems = userData.items.map(item => 
+          item.id === id ? { ...item, ...updates } : item
+        );
+        await updateDoc(userDocRef, {
+          items: updatedItems,
+          updatedAt: serverTimestamp()
+        });
+      }
     } catch (error) {
       console.error('Error updating pantry item:', error);
       throw new Error('Failed to update pantry item');
