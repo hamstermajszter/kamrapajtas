@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -6,6 +6,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { PantryService } from '../../services/pantry.service';
+import { RecipeService } from '../../services/recipe.service';
+import { Recipe } from '../../models/recipe.interface';
 import { PantryItem } from '../../models/pantry-item.interface';
 import { QuantityDisplayPipe } from '../../pipes/quantity-display.pipe';
 
@@ -26,6 +28,10 @@ import { QuantityDisplayPipe } from '../../pipes/quantity-display.pipe';
     <mat-card class="pantry-list-card">
       <mat-card-header>
         <mat-card-title>Kamra</mat-card-title>
+        <div class="spacer"></div>
+        <button mat-raised-button color="primary" (click)="onGenerateRecipes()" [disabled]="isGenerating">
+          {{ isGenerating ? 'Generálás…' : '3 recept generálása' }}
+        </button>
       </mat-card-header>
       <mat-card-content>
         @if (pantryItemsSig().length === 0) {
@@ -62,6 +68,34 @@ import { QuantityDisplayPipe } from '../../pipes/quantity-display.pipe';
           </table>
         }
       </mat-card-content>
+      @if (generatedRecipesSig().length > 0) {
+        <mat-card-content>
+          <h3>Javasolt receptek</h3>
+          <div class="recipes">
+            @for (r of generatedRecipesSig(); track r.title) {
+              <div class="recipe">
+                <h4>{{ r.title }}</h4>
+                <div class="meta">Idő: {{ r.estimatedTimeMinutes }} perc • Nehézség: {{ r.difficulty }}</div>
+                <div class="section">
+                  <strong>Hozzávalók:</strong>
+                  <ul>
+                    @for (ing of r.ingredients; track ing) { <li>{{ ing }}</li> }
+                  </ul>
+                </div>
+                <div class="section">
+                  <strong>Lépések:</strong>
+                  <ol>
+                    @for (step of r.steps; track step) { <li>{{ step }}</li> }
+                  </ol>
+                </div>
+                @if (r.missingIngredients?.length) {
+                  <div class="missing">Hiányzik: {{ r.missingIngredients.join(', ') }}</div>
+                }
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      }
     </mat-card>
   `,
   styles: [`
@@ -76,6 +110,10 @@ import { QuantityDisplayPipe } from '../../pipes/quantity-display.pipe';
 
     .actions-cell {
       text-align: right;
+    }
+
+    .spacer {
+      flex: 1 1 auto;
     }
 
     .empty-state {
@@ -95,11 +133,15 @@ import { QuantityDisplayPipe } from '../../pipes/quantity-display.pipe';
 })
 export class PantryListComponent {
   private pantryService = inject(PantryService);
+  private recipeService = inject(RecipeService);
   private snackBar = inject(MatSnackBar);
 
   // Switch to signal-based state for zoneless change detection
   readonly pantryItemsSig = this.pantryService.pantryItemsSig;
   displayedColumns: string[] = ['name', 'quantity', 'actions'];
+
+  isGenerating = false;
+  generatedRecipesSig = signal<Recipe[]>([]);
 
   async onDelete(item: PantryItem): Promise<void> {
     try {
@@ -114,6 +156,22 @@ export class PantryListComponent {
         duration: 5000,
         panelClass: ['error-snackbar']
       });
+    }
+  }
+
+  async onGenerateRecipes(): Promise<void> {
+    this.isGenerating = true;
+    try {
+      const recipes = await this.recipeService.generateRecipes();
+      this.generatedRecipesSig.set(recipes ?? []);
+      if (!recipes?.length) {
+        this.snackBar.open('Nem sikerült receptet generálni.', 'Bezár', { duration: 4000, panelClass: ['error-snackbar'] });
+      }
+    } catch (error) {
+      console.error('Error generating recipes:', error);
+      this.snackBar.open('Hiba történt a receptgenerálás során.', 'Bezár', { duration: 5000, panelClass: ['error-snackbar'] });
+    } finally {
+      this.isGenerating = false;
     }
   }
 }
